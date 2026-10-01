@@ -1,0 +1,32 @@
+{
+  "name": "CYBER DEFENSE: NEXUS",
+  "short_name": "CyberTD",
+  "description": "ネオンサイバー空間で繰り広げられる本格タワーディフェンス。分岐強化・研究所・スキルを駆使して拠点を死守せよ！",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#070b14",
+  "theme_color": "#00f0ff",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "./icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": ["games", "strategy", "arcade"],
+  "lang": "ja"
+}

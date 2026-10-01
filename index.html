@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>CYBER DEFENSE: NEXUS | ネオンタワーディフェンス</title>
+  <meta name="description" content="サイバー空間で繰り広げられる本格ネオンタワーディフェンス。8種のタワー・分岐進化・司令官スキル・永続研究ツリーでコアを防衛せよ！" />
+  <meta name="theme-color" content="#070b14" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="CyberTD" />
+
+  <!-- PWA Manifest & Icons -->
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" type="image/png" href="./icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+
+  <!-- Google Fonts: Orbitron & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Outfit:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div id="app-container">
+    <!-- Top HUD Bar -->
+    <header id="hud-header">
+      <div class="hud-group left">
+        <div class="hud-item hp-pill" title="拠点コア残耐久">
+          <span class="hud-icon">🛡️</span>
+          <span id="hud-hp" class="hud-val">20</span><span class="hud-slash">/</span><span id="hud-hp-max" class="hud-max">20</span>
+        </div>
+        <div class="hud-item gold-pill" title="所持クレジット">
+          <span class="hud-icon">💰</span>
+          <span id="hud-gold" class="hud-val">350</span>
+        </div>
+        <div class="hud-item core-pill" title="クォンタムコア (永続研究用)">
+          <span class="hud-icon">💎</span>
+          <span id="hud-cores" class="hud-val">20</span>
+        </div>
+      </div>
+
+      <div class="hud-group center">
+        <div class="hud-item wave-pill">
+          <span class="wave-label">WAVE</span>
+          <span id="hud-wave" class="hud-val">1</span><span class="hud-slash">/</span><span id="hud-wave-max" class="hud-max">30</span>
+        </div>
+      </div>
+
+      <div class="hud-group right">
+        <button id="btn-install-pwa" class="hud-btn pwa-btn hidden" title="PWAアプリをインストール">
+          📱 インストール
+        </button>
+        <button id="btn-open-stages" class="hud-btn" title="ステージ選択">🗺️</button>
+        <button id="btn-open-tech" class="hud-btn tech-btn" title="研究所 (永続強化)">🔬</button>
+        <button id="btn-open-achieve" class="hud-btn" title="実績一覧">🏆</button>
+        <button id="btn-speed" class="hud-btn" title="速度切替">1x</button>
+        <button id="btn-pause" class="hud-btn" title="一時停止">⏸</button>
+        <button id="btn-audio" class="hud-btn" title="BGM/SE切替">🔊</button>
+      </div>
+    </header>
+
+    <!-- Canvas Game Viewport -->
+    <main id="canvas-container">
+      <canvas id="game-canvas"></canvas>
+    </main>
+
+    <!-- Bottom Controls & Mobile Touch Bar -->
+    <footer id="hud-footer">
+      <!-- Wave Trigger Banner -->
+      <button id="btn-start-wave" class="wave-action-bar">
+        <span class="pulse-dot"></span>
+        <span id="start-wave-text">NEXT WAVE IN 5s (TAP TO RUSH)</span>
+        <span class="rush-arrow">⚡</span>
+      </button>
+
+      <!-- Skills Bar -->
+      <div id="skills-bar" class="skills-strip">
+        <!-- Dynamically populated skills: Orbital, EMP, Overcharge, Supply -->
+      </div>
+
+      <!-- Tower Selector / Shop (Bottom Sheet Mode 1) -->
+      <div id="tower-shop" class="tower-selector-bar">
+        <!-- Dynamically populated 8 towers -->
+      </div>
+
+      <!-- Tower Inspector & Upgrade Drawer (Bottom Sheet Mode 2: shown when tower selected) -->
+      <div id="tower-inspector" class="inspector-drawer hidden">
+        <div class="insp-header">
+          <div class="insp-title-box">
+            <span id="insp-title" class="insp-title">パルス砲 Lv.1</span>
+            <button id="btn-target-mode" class="target-btn">標的: FIRST</button>
+          </div>
+          <button id="btn-close-inspector" class="insp-close-btn">✕</button>
+        </div>
+
+        <div id="insp-stats" class="insp-stats-row">
+          <!-- Stats Pills -->
+        </div>
+
+        <div class="insp-actions-row">
+          <!-- Normal Upgrade (Lv 1 -> 2, Lv 2 -> 3) -->
+          <button id="btn-upgrade-tower" class="btn-action upgrade-btn">
+            <span>レベル強化</span>
+            <strong id="upgrade-cost-text">💰 75</strong>
+          </button>
+
+          <!-- Branching Evolution (Lv 3 -> Path A / B) -->
+          <div id="evolve-section" class="evolve-choices hidden">
+            <button id="btn-evolve-a" class="btn-action evolve-btn a">
+              <strong>Path A</strong>
+            </button>
+            <button id="btn-evolve-b" class="btn-action evolve-btn b">
+              <strong>Path B</strong>
+            </button>
+          </div>
+
+          <!-- Sell Tower -->
+          <button id="btn-sell-tower" class="btn-action sell-btn">
+            <span>売却</span>
+            <strong id="sell-refund-text">💰 +50</strong>
+          </button>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Achievement Toast Notification -->
+    <div id="toast-notification" class="achievement-toast"></div>
+
+    <!-- Modals Backdrop -->
+    <div id="modal-backdrop" class="modal-backdrop hidden">
+      <!-- 1. Laboratory / Tech Tree Modal -->
+      <div id="modal-tech" class="cyber-modal hidden">
+        <div class="modal-header">
+          <h2>🔬 量子研究所 (TECHNOLOGY LAB)</h2>
+          <button class="btn-close-modal">✕</button>
+        </div>
+        <div class="modal-sub">
+          クォンタムコアを消費して全タワー・司令官・拠点を永続強化します。
+          <span class="cores-badge">所持コア: 💎 <span id="tech-cores-display">20</span></span>
+        </div>
+        <div id="tech-list" class="tech-grid">
+          <!-- Tech items injected by JS -->
+        </div>
+      </div>
+
+      <!-- 2. Stage Selection Modal -->
+      <div id="modal-stage" class="cyber-modal hidden">
+        <div class="modal-header">
+          <h2>🗺️ 作戦区域選択 (MISSIONS)</h2>
+          <button class="btn-close-modal">✕</button>
+        </div>
+        <div class="modal-sub">防衛任務を選択してください。キャンペーンと無限耐久のエンドレスモードをプレイ可能。</div>
+        <div id="stage-list" class="stages-grid">
+          <!-- Stages injected by JS -->
+        </div>
+      </div>
+
+      <!-- 3. Achievements Modal -->
+      <div id="modal-achieve" class="cyber-modal hidden">
+        <div class="modal-header">
+          <h2>🏆 実績・アチーブメント (AWARDS)</h2>
+          <button class="btn-close-modal">✕</button>
+        </div>
+        <div class="modal-sub">過酷な防衛ミッションを達成して大量のクォンタムコアを獲得せよ。</div>
+        <div id="achieve-list" class="achieve-grid">
+          <!-- Achievements injected by JS -->
+        </div>
+      </div>
+
+      <!-- 4. Result Modal (Game Over / Victory) -->
+      <div id="modal-result" class="cyber-modal result-modal hidden">
+        <h2 id="result-title" class="result-title">MISSION COMPLETE</h2>
+        <p id="result-desc" class="result-desc">拠点の防衛に成功しました。</p>
+        <div id="result-stats" class="result-stats-box"></div>
+        <div class="result-actions">
+          <button id="btn-result-retry" class="btn-result">再挑戦 🔄</button>
+          <button id="btn-result-tech" class="btn-result highlight">研究所で強化 🔬</button>
+          <button id="btn-result-select" class="btn-result">ステージ選択 🗺️</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

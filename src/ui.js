@@ -1,0 +1,595 @@
+// ==========================================
+// USER INTERFACE & MOBILE CONTROLLER
+// ==========================================
+import { TOWER_TYPES, MAPS, TECH_TREE, ACHIEVEMENTS, SKILLS } from './constants.js';
+import { state } from './state.js';
+import { audio } from './audio.js';
+
+export class UIManager {
+  constructor(gameEngine) {
+    this.game = gameEngine;
+    this.deferredInstallPrompt = null;
+
+    // Cache DOM Elements
+    this.dom = {
+      // HUD
+      baseHp: document.getElementById('hud-hp'),
+      baseHpMax: document.getElementById('hud-hp-max'),
+      gold: document.getElementById('hud-gold'),
+      cores: document.getElementById('hud-cores'),
+      wave: document.getElementById('hud-wave'),
+      waveMax: document.getElementById('hud-wave-max'),
+      waveTimer: document.getElementById('hud-wave-timer'),
+      speedBtn: document.getElementById('btn-speed'),
+      pauseBtn: document.getElementById('btn-pause'),
+      audioBtn: document.getElementById('btn-audio'),
+      installBtn: document.getElementById('btn-install-pwa'),
+
+      // Bottom control area
+      towerShop: document.getElementById('tower-shop'),
+      towerInspector: document.getElementById('tower-inspector'),
+      skillsBar: document.getElementById('skills-bar'),
+      waveActionBtn: document.getElementById('btn-start-wave'),
+      waveActionText: document.getElementById('start-wave-text'),
+
+      // Inspector Elements
+      inspectorTitle: document.getElementById('insp-title'),
+      inspectorStats: document.getElementById('insp-stats'),
+      targetModeBtn: document.getElementById('btn-target-mode'),
+      upgradeBtn: document.getElementById('btn-upgrade-tower'),
+      upgradeCost: document.getElementById('upgrade-cost-text'),
+      evolveSection: document.getElementById('evolve-section'),
+      evolveBtnA: document.getElementById('btn-evolve-a'),
+      evolveBtnB: document.getElementById('btn-evolve-b'),
+      sellBtn: document.getElementById('btn-sell-tower'),
+      sellRefund: document.getElementById('sell-refund-text'),
+      closeInspectorBtn: document.getElementById('btn-close-inspector'),
+
+      // Modals
+      modalBackdrop: document.getElementById('modal-backdrop'),
+      techModal: document.getElementById('modal-tech'),
+      techList: document.getElementById('tech-list'),
+      techCoresDisplay: document.getElementById('tech-cores-display'),
+      achieveModal: document.getElementById('modal-achieve'),
+      achieveList: document.getElementById('achieve-list'),
+      stageModal: document.getElementById('modal-stage'),
+      stageList: document.getElementById('stage-list'),
+      resultModal: document.getElementById('modal-result'),
+      resultTitle: document.getElementById('result-title'),
+      resultDesc: document.getElementById('result-desc'),
+      resultStats: document.getElementById('result-stats'),
+      resultRetryBtn: document.getElementById('btn-result-retry'),
+      resultSelectBtn: document.getElementById('btn-result-select'),
+      resultTechBtn: document.getElementById('btn-result-tech'),
+
+      // Floating Achievement Notification Toast
+      toastNotification: document.getElementById('toast-notification')
+    };
+
+    this.initPWA();
+    this.renderTowerShop();
+    this.renderSkills();
+    this.bindEvents();
+    this.bindState();
+  }
+
+  initPWA() {
+    // Listen for PWA installation prompt
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      this.deferredInstallPrompt = e;
+      if (this.dom.installBtn) {
+        this.dom.installBtn.classList.remove('hidden');
+      }
+    });
+
+    window.addEventListener('appinstalled', () => {
+      this.deferredInstallPrompt = null;
+      if (this.dom.installBtn) {
+        this.dom.installBtn.classList.add('hidden');
+      }
+      this.showToast('📱 インストール完了！ホーム画面からいつでもプレイできます');
+    });
+  }
+
+  showToast(message, title = 'ACHIEVEMENT UNLOCKED') {
+    if (!this.dom.toastNotification) return;
+    this.dom.toastNotification.innerHTML = `
+      <div class="toast-title">${title}</div>
+      <div class="toast-body">${message}</div>
+    `;
+    this.dom.toastNotification.classList.add('show');
+    audio.playUpgrade();
+    setTimeout(() => {
+      this.dom.toastNotification.classList.remove('show');
+    }, 3800);
+  }
+
+  bindState() {
+    state.onChange((data) => {
+      if (this.dom.cores) this.dom.cores.innerText = data.quantumCores;
+      if (this.dom.techCoresDisplay) this.dom.techCoresDisplay.innerText = data.quantumCores;
+    });
+
+    state.onAchievement((ach) => {
+      this.showToast(`${ach.title}: ${ach.desc} (+${ach.reward} 💎)`, '🏆 実績解除！');
+    });
+  }
+
+  renderTowerShop() {
+    if (!this.dom.towerShop) return;
+    this.dom.towerShop.innerHTML = '';
+
+    for (const key in TOWER_TYPES) {
+      const tower = TOWER_TYPES[key];
+      const card = document.createElement('button');
+      card.className = 'tower-card';
+      card.dataset.type = tower.id;
+      card.innerHTML = `
+        <div class="tower-icon" style="color: ${tower.color}; text-shadow: 0 0 10px ${tower.color};">
+          ${this.getTowerSymbol(tower.id)}
+        </div>
+        <div class="tower-name">${tower.name}</div>
+        <div class="tower-cost">💰 ${tower.cost}</div>
+      `;
+      card.addEventListener('click', (e) => {
+        e.stopPropagation();
+        audio.ensureContext();
+        this.game.setBuildingType(tower.id);
+      });
+      this.dom.towerShop.appendChild(card);
+    }
+  }
+
+  getTowerSymbol(typeId) {
+    const symbols = {
+      pulse: '⬡',
+      gatling: '⚙',
+      sniper: '✦',
+      cryo: '❄',
+      cannon: '▲',
+      tesla: '⚡',
+      laser: '═',
+      booster: '◈'
+    };
+    return symbols[typeId] || '⬡';
+  }
+
+  renderSkills() {
+    if (!this.dom.skillsBar) return;
+    this.dom.skillsBar.innerHTML = '';
+
+    for (const key in SKILLS) {
+      const skill = SKILLS[key];
+      const btn = document.createElement('button');
+      btn.className = 'skill-btn';
+      btn.id = `skill-${skill.id}`;
+      btn.innerHTML = `
+        <span class="skill-icon">${skill.icon}</span>
+        <span class="skill-name">${skill.name}</span>
+        <div class="skill-overlay" id="skill-overlay-${skill.id}"></div>
+        <span class="skill-cd-text" id="skill-cd-${skill.id}"></span>
+      `;
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        audio.ensureContext();
+        this.game.activateSkill(skill.id);
+      });
+      this.dom.skillsBar.appendChild(btn);
+    }
+  }
+
+  bindEvents() {
+    // 1. HUD Controls
+    this.dom.speedBtn?.addEventListener('click', () => {
+      audio.ensureContext();
+      if (this.game.gameSpeed === 1.0) this.game.gameSpeed = 2.0;
+      else if (this.game.gameSpeed === 2.0) this.game.gameSpeed = 3.0;
+      else this.game.gameSpeed = 1.0;
+      this.dom.speedBtn.innerText = `${this.game.gameSpeed}x`;
+    });
+
+    this.dom.pauseBtn?.addEventListener('click', () => {
+      audio.ensureContext();
+      this.game.isPaused = !this.game.isPaused;
+      this.dom.pauseBtn.innerText = this.game.isPaused ? '▶' : '⏸';
+    });
+
+    this.dom.audioBtn?.addEventListener('click', () => {
+      audio.ensureContext();
+      const isPlaying = audio.toggleBgm();
+      this.dom.audioBtn.innerText = isPlaying ? '🔊' : '🔇';
+    });
+
+    this.dom.installBtn?.addEventListener('click', async () => {
+      if (this.deferredInstallPrompt) {
+        this.deferredInstallPrompt.prompt();
+        const { outcome } = await this.deferredInstallPrompt.userChoice;
+        if (outcome === 'accepted') {
+          this.dom.installBtn.classList.add('hidden');
+        }
+        this.deferredInstallPrompt = null;
+      } else {
+        alert('ブラウザメニューの「ホーム画面に追加」または「インストール」からアプリ化できます。');
+      }
+    });
+
+    // 2. Wave start button
+    this.dom.waveActionBtn?.addEventListener('click', () => {
+      audio.ensureContext();
+      this.game.startNextWaveImmediately();
+    });
+
+    // 3. Modals Open Buttons
+    document.getElementById('btn-open-tech')?.addEventListener('click', () => this.openTechModal());
+    document.getElementById('btn-open-achieve')?.addEventListener('click', () => this.openAchieveModal());
+    document.getElementById('btn-open-stages')?.addEventListener('click', () => this.openStageModal());
+
+    // 4. Modal Close
+    document.querySelectorAll('.btn-close-modal').forEach((btn) => {
+      btn.addEventListener('click', () => this.closeModals());
+    });
+    this.dom.modalBackdrop?.addEventListener('click', (e) => {
+      if (e.target === this.dom.modalBackdrop) this.closeModals();
+    });
+
+    // 5. Inspector Actions
+    this.dom.targetModeBtn?.addEventListener('click', () => {
+      if (this.game.selectedTower) {
+        this.game.selectedTower.cycleTargetMode();
+        this.updateInspector(this.game.selectedTower);
+      }
+    });
+
+    this.dom.upgradeBtn?.addEventListener('click', () => {
+      this.game.upgradeSelectedTower();
+    });
+
+    this.dom.evolveBtnA?.addEventListener('click', () => {
+      this.game.evolveSelectedTower('pathA');
+    });
+
+    this.dom.evolveBtnB?.addEventListener('click', () => {
+      this.game.evolveSelectedTower('pathB');
+    });
+
+    this.dom.sellBtn?.addEventListener('click', () => {
+      this.game.sellSelectedTower();
+    });
+
+    this.dom.closeInspectorBtn?.addEventListener('click', () => {
+      this.game.selectTower(null);
+    });
+
+    // 6. Result Modal Buttons
+    this.dom.resultRetryBtn?.addEventListener('click', () => {
+      this.closeModals();
+      this.game.loadStage(this.game.currentMapId, this.game.isEndless);
+    });
+    this.dom.resultSelectBtn?.addEventListener('click', () => {
+      this.closeModals();
+      this.openStageModal();
+    });
+    this.dom.resultTechBtn?.addEventListener('click', () => {
+      this.closeModals();
+      this.openTechModal();
+    });
+
+    // 7. Game Engine Callbacks
+    this.game.onStateChange = (gameState) => this.onGameStateUpdate(gameState);
+    this.game.onGameOver = (wave) => this.showGameOverModal(wave);
+    this.game.onVictory = (wave, isFlawless, coreReward) => this.showVictoryModal(wave, isFlawless, coreReward);
+  }
+
+  onGameStateUpdate(gameState) {
+    const { gold, baseHp, maxBaseHp, wave, maxWaves, waveState, waveTimer, selectedTower, buildingType, skillCooldowns, skillsConfig, isEndless } = gameState;
+
+    // HUD Update
+    if (this.dom.gold) this.dom.gold.innerText = gold;
+    if (this.dom.baseHp) this.dom.baseHp.innerText = baseHp;
+    if (this.dom.baseHpMax) this.dom.baseHpMax.innerText = maxBaseHp;
+    if (this.dom.wave) this.dom.wave.innerText = wave;
+    if (this.dom.waveMax) this.dom.waveMax.innerText = isEndless ? '∞' : maxWaves;
+
+    // Wave Action Button
+    if (waveState === 'INTERMISSION') {
+      this.dom.waveActionBtn?.classList.remove('busy');
+      if (this.dom.waveActionText) {
+        this.dom.waveActionText.innerText = `NEXT WAVE IN ${waveTimer}s (TAP TO RUSH)`;
+      }
+    } else {
+      this.dom.waveActionBtn?.classList.add('busy');
+      if (this.dom.waveActionText) {
+        this.dom.waveActionText.innerText = waveState === 'SPAWNING' ? 'HOSTILES INCOMING...' : 'DEFENDING CORE...';
+      }
+    }
+
+    // Tower Shop highlights & affordability
+    document.querySelectorAll('.tower-card').forEach((card) => {
+      const typeId = card.dataset.type;
+      const def = TOWER_TYPES[typeId];
+      if (buildingType === typeId) {
+        card.classList.add('active');
+      } else {
+        card.classList.remove('active');
+      }
+      if (def && gold < def.cost) {
+        card.classList.add('disabled');
+      } else {
+        card.classList.remove('disabled');
+      }
+    });
+
+    // Skill Cooldown Overlays
+    for (const key in skillCooldowns) {
+      const cd = skillCooldowns[key];
+      const maxCd = skillsConfig[key].cooldown;
+      const overlay = document.getElementById(`skill-overlay-${key}`);
+      const cdText = document.getElementById(`skill-cd-${key}`);
+      const btn = document.getElementById(`skill-${key}`);
+
+      if (cd > 0) {
+        btn?.classList.add('cooldown');
+        if (overlay) overlay.style.height = `${(cd / maxCd) * 100}%`;
+        if (cdText) cdText.innerText = `${Math.ceil(cd)}s`;
+      } else {
+        btn?.classList.remove('cooldown');
+        if (overlay) overlay.style.height = '0%';
+        if (cdText) cdText.innerText = '';
+      }
+    }
+
+    // Inspector Bottom Sheet
+    if (selectedTower) {
+      this.dom.towerInspector?.classList.remove('hidden');
+      this.dom.towerShop?.classList.add('hidden');
+      this.updateInspector(selectedTower);
+    } else {
+      this.dom.towerInspector?.classList.add('hidden');
+      this.dom.towerShop?.classList.remove('hidden');
+    }
+  }
+
+  updateInspector(tower) {
+    if (!tower) return;
+
+    if (this.dom.inspectorTitle) {
+      this.dom.inspectorTitle.innerText = `${tower.getName()} [${tower.targetMode}]`;
+    }
+
+    if (this.dom.inspectorStats) {
+      const dmg = Math.round(tower.effectiveDamage);
+      const rate = tower.effectiveFireRate.toFixed(1);
+      const rng = Math.round(tower.effectiveRange);
+      this.dom.inspectorStats.innerHTML = `
+        <div class="stat-pill">⚔️ 威力: <span>${dmg}</span></div>
+        <div class="stat-pill">⚡ 速度: <span>${rate}/s</span></div>
+        <div class="stat-pill">📡 射程: <span>${rng}</span></div>
+      `;
+    }
+
+    if (this.dom.targetModeBtn) {
+      this.dom.targetModeBtn.innerText = `標的: ${tower.targetMode}`;
+    }
+
+    // Upgrades or Branching Evolution
+    const upgradeCost = tower.getUpgradeCost();
+    if (tower.level < 3 && upgradeCost) {
+      this.dom.upgradeBtn?.classList.remove('hidden');
+      this.dom.evolveSection?.classList.add('hidden');
+      if (this.dom.upgradeCost) this.dom.upgradeCost.innerText = `💰 ${upgradeCost}`;
+      if (this.game.gold < upgradeCost) {
+        this.dom.upgradeBtn?.classList.add('disabled');
+      } else {
+        this.dom.upgradeBtn?.classList.remove('disabled');
+      }
+    } else if (tower.level === 3 && !tower.evolvedPath) {
+      // Show Branching Options
+      this.dom.upgradeBtn?.classList.add('hidden');
+      this.dom.evolveSection?.classList.remove('hidden');
+
+      const pathA = tower.def.paths.pathA;
+      const pathB = tower.def.paths.pathB;
+
+      if (this.dom.evolveBtnA) {
+        this.dom.evolveBtnA.innerHTML = `
+          <strong>${pathA.name}</strong>
+          <small>${pathA.desc}</small>
+          <span class="cost">💰 ${pathA.cost}</span>
+        `;
+        if (this.game.gold < pathA.cost) this.dom.evolveBtnA.classList.add('disabled');
+        else this.dom.evolveBtnA.classList.remove('disabled');
+      }
+
+      if (this.dom.evolveBtnB) {
+        this.dom.evolveBtnB.innerHTML = `
+          <strong>${pathB.name}</strong>
+          <small>${pathB.desc}</small>
+          <span class="cost">💰 ${pathB.cost}</span>
+        `;
+        if (this.game.gold < pathB.cost) this.dom.evolveBtnB.classList.add('disabled');
+        else this.dom.evolveBtnB.classList.remove('disabled');
+      }
+    } else {
+      // Max Level
+      this.dom.upgradeBtn?.classList.add('hidden');
+      this.dom.evolveSection?.classList.add('hidden');
+    }
+
+    // Sell Refund
+    const refund = Math.floor(tower.totalInvested * 0.7);
+    if (this.dom.sellRefund) {
+      this.dom.sellRefund.innerText = `💰 +${refund}`;
+    }
+  }
+
+  // --- Modals ---
+
+  closeModals() {
+    this.dom.modalBackdrop?.classList.add('hidden');
+    this.dom.techModal?.classList.add('hidden');
+    this.dom.achieveModal?.classList.add('hidden');
+    this.dom.stageModal?.classList.add('hidden');
+    this.dom.resultModal?.classList.add('hidden');
+  }
+
+  openTechModal() {
+    audio.ensureContext();
+    this.dom.modalBackdrop?.classList.remove('hidden');
+    this.dom.techModal?.classList.remove('hidden');
+    if (this.dom.techCoresDisplay) {
+      this.dom.techCoresDisplay.innerText = state.data.quantumCores;
+    }
+    this.renderTechTree();
+  }
+
+  renderTechTree() {
+    if (!this.dom.techList) return;
+    this.dom.techList.innerHTML = '';
+
+    for (const tech of TECH_TREE) {
+      const lvl = state.getTechLevel(tech.id);
+      const isMax = lvl >= tech.maxLevel;
+      const cost = isMax ? null : tech.costPerLevel(lvl);
+      const canAfford = !isMax && state.data.quantumCores >= cost;
+
+      const item = document.createElement('div');
+      item.className = 'tech-item';
+      item.innerHTML = `
+        <div class="tech-icon">${tech.icon}</div>
+        <div class="tech-info">
+          <div class="tech-title">${tech.name} <span class="tech-level">Lv.${lvl}/${tech.maxLevel}</span></div>
+          <div class="tech-desc">${tech.desc}</div>
+          <div class="tech-current">効果: <strong>${tech.format(lvl * tech.effectPerLevel)}</strong></div>
+        </div>
+        <div class="tech-action">
+          ${isMax ? '<span class="max-badge">MAX</span>' : `
+            <button class="btn-tech-buy ${canAfford ? '' : 'disabled'}" data-tech="${tech.id}">
+              💎 ${cost}
+            </button>
+          `}
+        </div>
+      `;
+
+      item.querySelector('.btn-tech-buy')?.addEventListener('click', () => {
+        if (state.upgradeTech(tech.id)) {
+          audio.playUpgrade();
+          this.renderTechTree();
+        }
+      });
+
+      this.dom.techList.appendChild(item);
+    }
+  }
+
+  openAchieveModal() {
+    audio.ensureContext();
+    this.dom.modalBackdrop?.classList.remove('hidden');
+    this.dom.achieveModal?.classList.remove('hidden');
+    this.renderAchievements();
+  }
+
+  renderAchievements() {
+    if (!this.dom.achieveList) return;
+    this.dom.achieveList.innerHTML = '';
+
+    for (const ach of ACHIEVEMENTS) {
+      const isUnlocked = state.data.unlockedAchievements.includes(ach.id);
+      const item = document.createElement('div');
+      item.className = `achieve-item ${isUnlocked ? 'unlocked' : 'locked'}`;
+      item.innerHTML = `
+        <div class="achieve-status">${isUnlocked ? '✓' : '🔒'}</div>
+        <div class="achieve-details">
+          <div class="achieve-title">${ach.title}</div>
+          <div class="achieve-desc">${ach.desc}</div>
+        </div>
+        <div class="achieve-reward">
+          💎 +${ach.reward}
+        </div>
+      `;
+      this.dom.achieveList.appendChild(item);
+    }
+  }
+
+  openStageModal() {
+    audio.ensureContext();
+    this.dom.modalBackdrop?.classList.remove('hidden');
+    this.dom.stageModal?.classList.remove('hidden');
+    this.renderStages();
+  }
+
+  renderStages() {
+    if (!this.dom.stageList) return;
+    this.dom.stageList.innerHTML = '';
+
+    for (const map of MAPS) {
+      const record = state.data.stageRecords[map.id] || { highestWave: 0, stars: 0, cleared: false };
+      const card = document.createElement('div');
+      card.className = `stage-card ${record.cleared ? 'cleared' : ''}`;
+      card.innerHTML = `
+        <div class="stage-header">
+          <span class="stage-name">${map.name}</span>
+          <span class="stage-diff">${map.difficulty}</span>
+        </div>
+        <div class="stage-desc">${map.desc}</div>
+        <div class="stage-footer">
+          <span class="stage-waves">WAVES: ${map.wavesCount}</span>
+          <span class="stage-reward">初クリア: 💎 ${map.coreReward}</span>
+          <div class="stage-btns">
+            <button class="btn-play-stage" data-map="${map.id}">CAMPAIGN</button>
+            <button class="btn-play-endless" data-map="${map.id}">ENDLESS</button>
+          </div>
+        </div>
+      `;
+
+      card.querySelector('.btn-play-stage')?.addEventListener('click', () => {
+        this.closeModals();
+        this.game.loadStage(map.id, false);
+      });
+
+      card.querySelector('.btn-play-endless')?.addEventListener('click', () => {
+        this.closeModals();
+        this.game.loadStage(map.id, true);
+      });
+
+      this.dom.stageList.appendChild(card);
+    }
+  }
+
+  showGameOverModal(wave) {
+    this.dom.modalBackdrop?.classList.remove('hidden');
+    this.dom.resultModal?.classList.remove('hidden');
+    if (this.dom.resultTitle) {
+      this.dom.resultTitle.innerText = 'MISSION FAILED';
+      this.dom.resultTitle.className = 'result-title defeat';
+    }
+    if (this.dom.resultDesc) {
+      this.dom.resultDesc.innerText = '拠点の防衛ラインが突破されました。研究所でタワーを強化して再挑戦しましょう。';
+    }
+    if (this.dom.resultStats) {
+      this.dom.resultStats.innerHTML = `
+        <div class="res-stat">到達ウェーブ: <strong>${wave}</strong></div>
+        <div class="res-stat">所持コア: <strong>💎 ${state.data.quantumCores}</strong></div>
+      `;
+    }
+  }
+
+  showVictoryModal(wave, isFlawless, coreReward = 0) {
+    this.dom.modalBackdrop?.classList.remove('hidden');
+    this.dom.resultModal?.classList.remove('hidden');
+    if (this.dom.resultTitle) {
+      this.dom.resultTitle.innerText = isFlawless ? 'PERFECT VICTORY (FLAWLESS)' : 'MISSION ACCOMPLISHED';
+      this.dom.resultTitle.className = 'result-title victory';
+    }
+    if (this.dom.resultDesc) {
+      this.dom.resultDesc.innerText = 'すべての侵略軍を殲滅しました！新たなクォンタムコアを獲得しました。';
+    }
+    if (this.dom.resultStats) {
+      this.dom.resultStats.innerHTML = `
+        <div class="res-stat">クリアウェーブ: <strong>${wave}</strong></div>
+        <div class="res-stat">獲得コア: <strong>💎 +${coreReward}</strong></div>
+        <div class="res-stat">拠点完全防衛: <strong>${isFlawless ? '🏆 達成' : '通常'}</strong></div>
+      `;
+    }
+  }
+}
