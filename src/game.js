@@ -131,11 +131,13 @@ export class GameEngine {
     this.viewportHeight = h;
     if (this.map) {
       this.map.resize(w, h);
-      // Reposition existing towers to match resized grid cells
+      // Reposition and scale existing towers to match resized grid cells
       for (const t of this.towers) {
         const p = this.map.gridToPixel(t.col, t.row);
         t.x = p.x;
         t.y = p.y;
+        t.mapScale = this.map.scale;
+        t.recalculateStats();
       }
     }
   }
@@ -189,7 +191,7 @@ export class GameEngine {
 
     this.gold -= def.cost;
     const pixel = this.map.gridToPixel(col, row);
-    const tower = new Tower(this.buildingType, col, row, pixel.x, pixel.y);
+    const tower = new Tower(this.buildingType, col, row, pixel.x, pixel.y, this.map.scale);
     this.towers.push(tower);
     this.map.occupyCell(col, row);
 
@@ -302,15 +304,17 @@ export class GameEngine {
 
     switch (skillId) {
       case 'orbital': {
+        const scale = this.map ? (this.map.scale || 1) : 1;
+        const radius = skill.radius * scale;
         audio.playSkill('orbital');
         effects.shake(14, 0.5);
-        effects.addShockwave(targetPos.x, targetPos.y, skill.radius * 1.2, '#00f0ff', 0.6, 6);
-        effects.emitExplosion(targetPos.x, targetPos.y, '#00f0ff', 50, skill.radius);
+        effects.addShockwave(targetPos.x, targetPos.y, radius * 1.2, '#00f0ff', 0.6, 6);
+        effects.emitExplosion(targetPos.x, targetPos.y, '#00f0ff', 50, radius);
 
         for (const enemy of this.enemies) {
           if (!enemy.dead) {
             const dist = Math.hypot(enemy.x - targetPos.x, enemy.y - targetPos.y);
-            if (dist <= skill.radius) {
+            if (dist <= radius) {
               enemy.takeDamage(skill.damage, 'pierce', true);
             }
           }
@@ -483,7 +487,7 @@ export class GameEngine {
 
     // 2. Update Towers
     for (const tower of this.towers) {
-      tower.update(effectiveDt, this.enemies, this.projectiles, this.overchargeTimer > 0);
+      tower.update(effectiveDt, this.enemies, this.projectiles, this.overchargeTimer > 0, this.map?.scale);
     }
 
     // 3. Update Enemies
@@ -645,12 +649,16 @@ export class GameEngine {
     if (this.buildingType && this.pointerGrid && this.map.isValidGrid(this.pointerGrid.col, this.pointerGrid.row)) {
       const p = this.map.gridToPixel(this.pointerGrid.col, this.pointerGrid.row);
       const def = TOWER_TYPES[this.buildingType];
+      const techRange = state.getTechMultiplier('tower_range');
+      const scale = this.map ? (this.map.scale || 1) : 1;
+      const previewRange = def.range * (1 + techRange) * scale;
+
       ctx.save();
       ctx.strokeStyle = previewCanBuild ? def.color : '#ff2e63';
       ctx.fillStyle = ctx.strokeStyle;
       ctx.globalAlpha = 0.12;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, def.range, 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, previewRange, 0, Math.PI * 2);
       ctx.fill();
       ctx.globalAlpha = 0.6;
       ctx.lineWidth = 1.5;
@@ -662,6 +670,9 @@ export class GameEngine {
     // 4. Draw Orbital Strike Targeting Reticle
     if (this.activeSkillTargeting === 'orbital' && this.pointerGrid) {
       const p = this.map.gridToPixel(this.pointerGrid.col, this.pointerGrid.row);
+      const scale = this.map ? (this.map.scale || 1) : 1;
+      const strikeRadius = SKILLS.orbital.radius * scale;
+
       ctx.save();
       ctx.strokeStyle = '#00f0ff';
       ctx.fillStyle = 'rgba(0, 240, 255, 0.15)';
@@ -669,16 +680,16 @@ export class GameEngine {
       ctx.shadowBlur = 10;
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, SKILLS.orbital.radius, 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, strikeRadius, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
 
       // Crosshairs
       ctx.beginPath();
-      ctx.moveTo(p.x - SKILLS.orbital.radius - 10, p.y);
-      ctx.lineTo(p.x + SKILLS.orbital.radius + 10, p.y);
-      ctx.moveTo(p.x, p.y - SKILLS.orbital.radius - 10);
-      ctx.lineTo(p.x, p.y + SKILLS.orbital.radius + 10);
+      ctx.moveTo(p.x - strikeRadius - 10 * scale, p.y);
+      ctx.lineTo(p.x + strikeRadius + 10 * scale, p.y);
+      ctx.moveTo(p.x, p.y - strikeRadius - 10 * scale);
+      ctx.lineTo(p.x, p.y + strikeRadius + 10 * scale);
       ctx.stroke();
       ctx.restore();
     }

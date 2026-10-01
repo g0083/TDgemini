@@ -10,7 +10,7 @@ import { state } from './state.js';
 export const TARGET_MODES = ['FIRST', 'LAST', 'STRONGEST', 'WEAKEST'];
 
 export class Tower {
-  constructor(typeId, col, row, pixelX, pixelY) {
+  constructor(typeId, col, row, pixelX, pixelY, mapScale = 1.0) {
     this.id = Math.random().toString(36).substr(2, 9);
     this.typeId = typeId;
     this.def = TOWER_TYPES[typeId];
@@ -18,6 +18,7 @@ export class Tower {
     this.row = row;
     this.x = pixelX;
     this.y = pixelY;
+    this.mapScale = mapScale || 1.0;
 
     // Upgrades
     this.level = 1; // 1: base, 2: Mk-II, 3: Mk-III, 4: Path A or Path B
@@ -77,7 +78,7 @@ export class Tower {
 
     this.effectiveDamage = baseDmg * (1 + techDmg + this.buffDamage);
     this.effectiveFireRate = baseRate * (1 + techRate + this.buffRate);
-    this.effectiveRange = baseRange * (1 + techRange + this.buffRange);
+    this.effectiveRange = baseRange * (1 + techRange + this.buffRange) * (this.mapScale || 1.0);
     this.critChance = (this.evolvedData?.critChance || 0) + state.getTechMultiplier('crit_matrix') + this.buffCrit;
   }
 
@@ -182,7 +183,10 @@ export class Tower {
     }
   }
 
-  update(dt, enemies, newProjectiles, overchargeActive = false) {
+  update(dt, enemies, newProjectiles, overchargeActive = false, mapScale = null) {
+    if (mapScale && mapScale !== this.mapScale) {
+      this.mapScale = mapScale;
+    }
     this.recalculateStats();
 
     // Recoil recovery
@@ -248,6 +252,7 @@ export class Tower {
     if (isCrit) finalDmg *= 2.0;
 
     const color = this.evolvedData?.color || this.def.color;
+    const scale = this.mapScale || 1.0;
 
     // --- Tower Specific Weapon Logic ---
     switch (this.def.type) {
@@ -262,12 +267,13 @@ export class Tower {
             y: this.y,
             angle: this.angle,
             damage: finalDmg,
-            speed: 1200,
+            speed: 1200 * scale,
             type: 'piercing',
             pierceCount: 12,
             damageType: 'pierce',
             color: '#76ff03',
-            isCrit
+            isCrit,
+            mapScale: scale
           }));
         } else {
           // Anti-titan HP percent bonus
@@ -283,10 +289,11 @@ export class Tower {
             y: this.y,
             target: this.currentTarget,
             damage: dmg,
-            speed: 980,
+            speed: 980 * scale,
             damageType: 'pierce',
             color,
-            isCrit
+            isCrit,
+            mapScale: scale
           }));
         }
         break;
@@ -300,14 +307,15 @@ export class Tower {
           y: this.y,
           targetPos: { x: this.currentTarget.x, y: this.currentTarget.y },
           damage: finalDmg,
-          splashRadius: this.evolvedData?.splashRadius || this.def.splashRadius || 60,
+          splashRadius: (this.evolvedData?.splashRadius || this.def.splashRadius || 60) * scale,
           clusterCount: this.evolvedData?.clusterCount || 0,
           burnDuration: this.evolvedData?.burnDuration || 0,
-          speed: 400,
+          speed: 400 * scale,
           color,
           isArc: true,
           damageType: 'explosive',
-          isCrit
+          isCrit,
+          mapScale: scale
         }));
         break;
       }
@@ -320,11 +328,12 @@ export class Tower {
           y: this.y,
           target: this.currentTarget,
           damage: finalDmg,
-          speed: 460,
+          speed: 460 * scale,
           color,
           slowAmount: this.evolvedData?.slowAmount || this.def.slowAmount,
           slowDuration: this.def.slowDuration || 2.5,
-          isCrit
+          isCrit,
+          mapScale: scale
         }));
 
         if (this.evolvedData?.freezeChance && Math.random() < this.evolvedData.freezeChance) {
@@ -338,7 +347,7 @@ export class Tower {
         // Tesla Chain Arc
         audio.playShoot('tesla');
         const chainCount = this.evolvedData?.chainCount || this.def.chainCount || 3;
-        const chainRange = this.evolvedData?.chainRange || this.def.chainRange || 80;
+        const chainRange = (this.evolvedData?.chainRange || this.def.chainRange || 80) * scale;
         const stunDuration = this.evolvedData?.stunDuration || 0;
 
         let curSource = { x: this.x, y: this.y };
@@ -354,7 +363,7 @@ export class Tower {
           }
 
           // Emit visual arc line
-          effects.addShockwave(curTarget.x, curTarget.y, 20, color, 0.15, 2);
+          effects.addShockwave(curTarget.x, curTarget.y, 20 * scale, color, 0.15, 2);
 
           // Find next closest unhit target
           curSource = { x: curTarget.x, y: curTarget.y };
@@ -383,11 +392,12 @@ export class Tower {
           y: this.y,
           target: this.currentTarget,
           damage: finalDmg,
-          speed: this.def.bulletSpeed || 550,
+          speed: (this.def.bulletSpeed || 550) * scale,
           color,
           shredArmor: this.evolvedData?.shredArmor || 0,
           knockback: this.evolvedData?.knockback || 0,
-          isCrit
+          isCrit,
+          mapScale: scale
         }));
         break;
       }
@@ -400,7 +410,7 @@ export class Tower {
 
     const color = this.evolvedData?.color || this.def.color;
 
-    // 1. Draw Range Circle if selected
+    // 1. Draw Range Circle if selected (in pixel world coordinates)
     if (isSelected) {
       ctx.save();
       ctx.strokeStyle = color;
@@ -459,7 +469,11 @@ export class Tower {
       }
     }
 
-    // 4. Base Pedestal (Cyber Octagon / Hex)
+    // 4. Base Pedestal, Turret Barrel & Badges scaled by mapScale
+    const s = this.mapScale || 1.0;
+    ctx.save();
+    ctx.scale(s, s);
+
     ctx.save();
     ctx.fillStyle = '#0d1527';
     ctx.strokeStyle = color;
@@ -516,7 +530,7 @@ export class Tower {
     ctx.arc(0, 0, 6, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.restore();
+    ctx.restore(); // restores barrel rotation & pedestal
 
     // 6. Level Stars / Badges (unrotated)
     if (this.level > 1) {
@@ -529,6 +543,8 @@ export class Tower {
       ctx.restore();
     }
 
-    ctx.restore();
+    ctx.restore(); // restores ctx.scale(s, s)
+
+    ctx.restore(); // restores ctx.translate
   }
 }

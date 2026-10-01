@@ -39,6 +39,7 @@ export class Projectile {
     this.slowDuration = options.slowDuration || 0;
     this.shredArmor = options.shredArmor || 0;
     this.knockback = options.knockback || 0;
+    this.mapScale = options.mapScale || 1.0;
 
     this.dead = false;
   }
@@ -160,20 +161,22 @@ export class Projectile {
 
     // Cluster sub-munitions
     if (this.clusterCount > 0 && newProjectiles) {
+      const scale = this.mapScale || 1.0;
       for (let i = 0; i < this.clusterCount; i++) {
         const offsetAngle = (i * Math.PI * 2) / this.clusterCount;
-        const targetX = this.x + Math.cos(offsetAngle) * 50;
-        const targetY = this.y + Math.sin(offsetAngle) * 50;
+        const targetX = this.x + Math.cos(offsetAngle) * 50 * scale;
+        const targetY = this.y + Math.sin(offsetAngle) * 50 * scale;
         newProjectiles.push(new Projectile({
           x: this.x,
           y: this.y,
           targetPos: { x: targetX, y: targetY },
           damage: this.damage * 0.45,
-          splashRadius: 35,
-          speed: 300,
+          splashRadius: 35 * scale,
+          speed: 300 * scale,
           color: '#ff9100',
           isArc: true,
-          damageType: 'explosive'
+          damageType: 'explosive',
+          mapScale: scale
         }));
       }
     }

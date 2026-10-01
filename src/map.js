@@ -87,6 +87,8 @@ export class GameMap {
     this.cellHeight = h / this.rows;
     this.offsetX = (viewportWidth - w) / 2;
     this.offsetY = (viewportHeight - h) / 2;
+    this.BASE_CELL_SIZE = 40;
+    this.scale = this.cellWidth / this.BASE_CELL_SIZE;
   }
 
   // Convert grid coord (col, row) to world pixel coord (center of cell)

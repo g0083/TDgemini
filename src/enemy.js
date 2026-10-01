@@ -226,8 +226,10 @@ export class Enemy {
     }
 
     // 6. Movement along path
+    this.mapScale = gameMap ? (gameMap.scale || 1) : 1;
     this.speed = Math.max(15, this.baseSpeed * speedMult);
-    this.distance += (this.speed * dt) / (gameMap.cellWidth || 40); // distance in grid units
+    const baseCell = gameMap?.BASE_CELL_SIZE || 40;
+    this.distance += (this.speed * dt) / baseCell; // distance in grid units (constant velocity across all devices)
 
     const point = gameMap.getPointOnPath(this.pathIndex, this.distance);
     this.x = point.x;
@@ -247,6 +249,9 @@ export class Enemy {
     ctx.save();
     ctx.translate(this.x, this.y);
 
+    const scale = this.mapScale || 1.0;
+    const s = this.size * scale;
+
     // Stealth transparency
     if (this.stealthActive) {
       ctx.globalAlpha = 0.25;
@@ -256,16 +261,16 @@ export class Enemy {
     if (this.freezeTimer > 0) {
       ctx.strokeStyle = '#60d5ff';
       ctx.shadowColor = '#60d5ff';
-      ctx.shadowBlur = 12;
-      ctx.lineWidth = 3;
+      ctx.shadowBlur = 12 * scale;
+      ctx.lineWidth = 3 * scale;
       ctx.beginPath();
-      ctx.arc(0, 0, this.size + 4, 0, Math.PI * 2);
+      ctx.arc(0, 0, s + 4 * scale, 0, Math.PI * 2);
       ctx.stroke();
     } else if (this.slowTimer > 0) {
       ctx.strokeStyle = 'rgba(96, 213, 255, 0.5)';
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 2 * scale;
       ctx.beginPath();
-      ctx.arc(0, 0, this.size + 3, 0, Math.PI * 2);
+      ctx.arc(0, 0, s + 3 * scale, 0, Math.PI * 2);
       ctx.stroke();
     }
 
@@ -275,11 +280,11 @@ export class Enemy {
       ctx.save();
       ctx.strokeStyle = '#3d84ff';
       ctx.shadowColor = '#3d84ff';
-      ctx.shadowBlur = 10;
-      ctx.lineWidth = 2.5;
+      ctx.shadowBlur = 10 * scale;
+      ctx.lineWidth = 2.5 * scale;
       ctx.globalAlpha = 0.4 + 0.5 * shieldRatio;
       ctx.beginPath();
-      ctx.arc(0, 0, this.size + 6, 0, Math.PI * 2);
+      ctx.arc(0, 0, s + 6 * scale, 0, Math.PI * 2);
       ctx.stroke();
       ctx.restore();
     }
@@ -291,10 +296,8 @@ export class Enemy {
     ctx.fillStyle = this.color;
     ctx.strokeStyle = '#ffffff';
     ctx.shadowColor = this.color;
-    ctx.shadowBlur = this.isBoss ? 16 : 8;
-    ctx.lineWidth = 1.5;
-
-    const s = this.size;
+    ctx.shadowBlur = (this.isBoss ? 16 : 8) * scale;
+    ctx.lineWidth = 1.5 * scale;
 
     switch (this.shape) {
       case 'triangle':
@@ -382,10 +385,10 @@ export class Enemy {
 
     // HP Bar (Above Enemy, unrotated)
     if (this.hp < this.maxHp || this.shield > 0 || this.isBoss) {
-      const barW = Math.max(22, this.size * 2);
-      const barH = this.isBoss ? 5 : 3.5;
+      const barW = Math.max(22 * scale, s * 2);
+      const barH = (this.isBoss ? 5 : 3.5) * scale;
       const barX = this.x - barW / 2;
-      const barY = this.y - this.size - (this.shield > 0 ? 14 : 10);
+      const barY = this.y - s - (this.shield > 0 ? 14 : 10) * scale;
 
       // Background
       ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';

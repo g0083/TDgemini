@@ -212,7 +212,7 @@ export class UIManager {
 
     if (this.dom.prevStatDmg) this.dom.prevStatDmg.innerText = def.damage || '-';
     if (this.dom.prevStatRate) this.dom.prevStatRate.innerText = def.fireRate ? `${def.fireRate}/s` : '-';
-    if (this.dom.prevStatRange) this.dom.prevStatRange.innerText = def.range || '-';
+    if (this.dom.prevStatRange) this.dom.prevStatRange.innerText = def.range ? `${(def.range / 40).toFixed(1)}マス` : '-';
     if (this.dom.prevCostText) this.dom.prevCostText.innerHTML = `${ICONS.gold} ${def.cost}`;
 
     this.dom.towerPreviewCard?.classList.remove('hidden');
@@ -481,13 +481,14 @@ export class UIManager {
     if (this.dom.inspectorStats) {
       const dmg = Math.round(tower.effectiveDamage);
       const rate = tower.effectiveFireRate.toFixed(1);
-      const rng = Math.round(tower.effectiveRange);
+      const cellW = this.game.map?.cellWidth || 40;
+      const rngTiles = (tower.effectiveRange / cellW).toFixed(1);
       const role = tower.def.role;
       this.dom.inspectorStats.innerHTML = `
         <div class="stat-pill role">${role}</div>
         <div class="stat-pill">${ICONS.damage} 威力: <span>${dmg}</span></div>
         <div class="stat-pill">${ICONS.rate} 速度: <span>${rate}/s</span></div>
-        <div class="stat-pill">${ICONS.range} 射程: <span>${rng}</span></div>
+        <div class="stat-pill">${ICONS.range} 射程: <span>${rngTiles}マス</span></div>
       `;
     }
 
