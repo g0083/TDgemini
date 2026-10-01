@@ -492,11 +492,26 @@ export class GameEngine {
       enemy.update(effectiveDt, this.map, this.enemies);
 
       if (enemy.reachedNexus) {
-        // Reached base: damage player
-        this.baseHp = Math.max(0, this.baseHp - 1);
+        // Reached base: damage player based on enemy threat tier
+        const dmg = enemy.nexusDamage || enemy.def?.nexusDamage || 1;
+        this.baseHp = Math.max(0, this.baseHp - dmg);
         this.isFlawless = false;
-        effects.shake(8, 0.3);
-        effects.emitExplosion(enemy.x, enemy.y, '#ff2e63', 20, 45);
+
+        // Dynamic impact effects: heavier shake and explosion for high threat units
+        const shakeIntensity = enemy.isBoss ? 18 : (dmg > 1 ? 10 : 6);
+        effects.shake(shakeIntensity, enemy.isBoss ? 0.5 : 0.25);
+        effects.emitExplosion(enemy.x, enemy.y, '#ff2e63', enemy.isBoss ? 35 : 20, enemy.isBoss ? 65 : 45);
+
+        // Show floating damage number at nexus position
+        const nexusPixel = this.map.gridToPixel(this.map.data.nexus.x, this.map.data.nexus.y);
+        effects.addText(
+          nexusPixel.x,
+          nexusPixel.y - 18,
+          `-${dmg} HP!`,
+          '#ff2e63',
+          { isCrit: true, size: enemy.isBoss ? 22 : (dmg > 1 ? 17 : 14) }
+        );
+
         audio.playHit();
 
         if (this.baseHp <= 0) {

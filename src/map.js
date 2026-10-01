@@ -269,14 +269,25 @@ export class GameMap {
     const np = this.gridToPixel(this.data.nexus.x, this.data.nexus.y);
     const nexusRadius = Math.min(this.cellWidth, this.cellHeight) * 0.42;
     const hpRatio = Math.max(0, baseHp / maxBaseHp);
-    const nexusColor = hpRatio > 0.3 ? COLORS.nexus : COLORS.danger;
+
+    // Dynamic health status colors
+    let nexusColor = COLORS.nexus; // cyan
+    let barColor = '#00ff9d'; // vibrant neon green
+    if (hpRatio <= 0.25) {
+      nexusColor = COLORS.danger; // #ff2e63
+      barColor = '#ff2e63';
+    } else if (hpRatio <= 0.5) {
+      nexusColor = '#ffea00'; // warning yellow
+      barColor = '#ffea00';
+    }
 
     ctx.save();
-    // Outer rotating shield
+
+    // A. Outer rotating cyber shield (Hexagon)
     const angle = Date.now() * 0.002;
     ctx.strokeStyle = nexusColor;
     ctx.shadowColor = nexusColor;
-    ctx.shadowBlur = 14;
+    ctx.shadowBlur = hpRatio <= 0.25 ? 18 : 12;
     ctx.lineWidth = 2.5;
     ctx.beginPath();
     for (let i = 0; i < 6; i++) {
@@ -289,31 +300,108 @@ export class GameMap {
     ctx.closePath();
     ctx.stroke();
 
-    // Core glow
-    ctx.fillStyle = nexusColor;
-    ctx.globalAlpha = 0.25 + 0.2 * Math.sin(Date.now() * 0.005);
+    // B. Internal 360-degree HP Ring (Guaranteed inside the cell, never clips!)
+    const innerTrackRadius = nexusRadius * 0.72;
+    // Track background
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+    ctx.lineWidth = 3;
+    ctx.shadowBlur = 0;
     ctx.beginPath();
-    ctx.arc(np.x, np.y, nexusRadius * 0.7, 0, Math.PI * 2);
+    ctx.arc(np.x, np.y, innerTrackRadius, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Track active fill (clockwise from 12 o'clock)
+    if (hpRatio > 0) {
+      ctx.strokeStyle = barColor;
+      ctx.shadowColor = barColor;
+      ctx.shadowBlur = 6;
+      ctx.lineWidth = 3.5;
+      ctx.beginPath();
+      ctx.arc(
+        np.x,
+        np.y,
+        innerTrackRadius,
+        -Math.PI / 2,
+        -Math.PI / 2 + Math.PI * 2 * hpRatio
+      );
+      ctx.stroke();
+    }
+
+    // C. Core Glow & Pulsing Center
+    const pulseSpeed = hpRatio <= 0.25 ? 0.012 : 0.005;
+    ctx.fillStyle = nexusColor;
+    ctx.shadowColor = nexusColor;
+    ctx.shadowBlur = 10;
+    ctx.globalAlpha = 0.3 + 0.2 * Math.sin(Date.now() * pulseSpeed);
+    ctx.beginPath();
+    ctx.arc(np.x, np.y, innerTrackRadius * 0.65, 0, Math.PI * 2);
     ctx.fill();
 
-    // Core Center
     ctx.globalAlpha = 1.0;
     ctx.fillStyle = '#ffffff';
     ctx.beginPath();
-    ctx.arc(np.x, np.y, nexusRadius * 0.35, 0, Math.PI * 2);
+    ctx.arc(np.x, np.y, innerTrackRadius * 0.32, 0, Math.PI * 2);
     ctx.fill();
 
-    // HP Arc above nexus
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-    ctx.lineWidth = 4;
+    // D. Dedicated Horizontal Cyber HP Bar & Badge
+    // Positioned below the nexus by default, or above if nexus is at the bottom row.
+    // X coordinates are strictly clamped within grid bounds so it NEVER gets cut off at screen edges!
+    const isNearBottom = this.data.nexus.y >= this.rows - 2;
+    const barWidth = Math.max(58, Math.min(84, this.cellWidth * 2.2));
+    const barHeight = 5;
+    const badgeHeight = 19;
+
+    let barX = np.x - barWidth / 2;
+    // Clamping to stay within canvas/map area with a safety padding of 4px
+    barX = Math.max(this.offsetX + 4, Math.min(barX, this.offsetX + this.width - barWidth - 4));
+
+    let badgeY = isNearBottom
+      ? (np.y - nexusRadius - badgeHeight - 4)
+      : (np.y + nexusRadius + 4);
+    badgeY = Math.max(this.offsetY + 2, Math.min(badgeY, this.offsetY + this.height - badgeHeight - 2));
+
+    const innerBarY = badgeY + 11;
+
+    // Cyber Plate background
+    ctx.save();
+    ctx.fillStyle = 'rgba(6, 12, 24, 0.88)';
+    ctx.strokeStyle = hpRatio <= 0.25 ? 'rgba(255, 46, 99, 0.8)' : 'rgba(0, 240, 255, 0.4)';
+    ctx.lineWidth = 1;
+    ctx.shadowColor = ctx.strokeStyle;
+    ctx.shadowBlur = hpRatio <= 0.25 ? 8 : 4;
+
+    const bx = barX - 3;
+    const bw = barWidth + 6;
     ctx.beginPath();
-    ctx.arc(np.x, np.y, nexusRadius + 8, Math.PI * 0.8, Math.PI * 2.2);
+    if (ctx.roundRect) {
+      ctx.roundRect(bx, badgeY, bw, badgeHeight, 4);
+    } else {
+      ctx.rect(bx, badgeY, bw, badgeHeight);
+    }
+    ctx.fill();
     ctx.stroke();
 
-    ctx.strokeStyle = nexusColor;
-    ctx.beginPath();
-    ctx.arc(np.x, np.y, nexusRadius + 8, Math.PI * 0.8, Math.PI * 0.8 + (Math.PI * 1.4 * hpRatio));
-    ctx.stroke();
+    // HP Text
+    ctx.shadowBlur = 0;
+    ctx.font = 'bold 8.5px "Outfit", "Share Tech Mono", monospace, sans-serif';
+    ctx.fillStyle = hpRatio <= 0.25 ? '#ff2e63' : (hpRatio <= 0.5 ? '#ffea00' : '#00f0ff');
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText(`🛡️ HP ${baseHp}/${maxBaseHp}`, barX + barWidth / 2, badgeY + 2);
+
+    // HP Horizontal Fill Bar
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
+    ctx.fillRect(barX, innerBarY, barWidth, barHeight);
+
+    if (hpRatio > 0) {
+      const fillW = Math.max(2, barWidth * hpRatio);
+      ctx.fillStyle = barColor;
+      ctx.shadowColor = barColor;
+      ctx.shadowBlur = 6;
+      ctx.fillRect(barX, innerBarY, fillW, barHeight);
+    }
+    ctx.restore();
+
     ctx.restore();
 
     // 7. Preview Grid Cell (when placing a tower)

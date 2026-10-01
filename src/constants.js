@@ -399,6 +399,16 @@ export const COMBAT_GUIDE = [
       '🎯 【LAST】: 防衛線の後ろに陣取って周囲を回復し続ける敵を背後から狙い撃つ！',
       '🎯 【WEAKEST】: 瀕死の敵を優先して仕留め、取りこぼしを確実にゼロにする！'
     ]
+  },
+  {
+    category: '💥 拠点（ネクサス）への侵入ダメージ差',
+    color: '#ff2e63',
+    desc: '敵が防衛線を突破して拠点に到達したときのダメージは、敵の脅威度・サイズによって異なります。',
+    tips: [
+      '👾 小型・一般兵（スカウト・トルーパー・群れ）: 侵入時に拠点HP -1',
+      '🛡️ 重装甲・特殊兵（ヘビータンク・シールド・スプリッター・ファントム等）: 侵入時に拠点HP -2',
+      '👑 巨大ボス（コロッサス -5 / リーパー -7 / オーバーロード -10）: 拠点が壊滅的打撃を受けるため絶対に通してはならない！'
+    ]
   }
 ];
 
@@ -410,6 +420,7 @@ export const ENEMY_TYPES = {
     hp: 36,
     speed: 105,
     reward: 10,
+    nexusDamage: 1,
     color: '#00f0ff',
     size: 10,
     shape: 'triangle',
@@ -421,6 +432,7 @@ export const ENEMY_TYPES = {
     hp: 95,
     speed: 85,
     reward: 12,
+    nexusDamage: 1,
     color: '#39ff14',
     size: 13,
     shape: 'square',
@@ -433,6 +445,7 @@ export const ENEMY_TYPES = {
     armor: 0.25,
     speed: 55,
     reward: 25,
+    nexusDamage: 2,
     color: '#ff9900',
     size: 18,
     shape: 'hexagon',
@@ -445,6 +458,7 @@ export const ENEMY_TYPES = {
     shield: 160,
     speed: 75,
     reward: 22,
+    nexusDamage: 2,
     color: '#3d84ff',
     size: 14,
     shape: 'circle',
@@ -456,6 +470,7 @@ export const ENEMY_TYPES = {
     hp: 30,
     speed: 135,
     reward: 5,
+    nexusDamage: 1,
     color: '#ffea00',
     size: 8,
     shape: 'diamond',
@@ -467,6 +482,7 @@ export const ENEMY_TYPES = {
     hp: 200,
     speed: 68,
     reward: 20,
+    nexusDamage: 2,
     color: '#ff007f',
     size: 16,
     shape: 'star',
@@ -480,6 +496,7 @@ export const ENEMY_TYPES = {
     hp: 25,
     speed: 140,
     reward: 3,
+    nexusDamage: 1,
     color: '#ff4081',
     size: 7,
     shape: 'diamond',
@@ -491,6 +508,7 @@ export const ENEMY_TYPES = {
     hp: 175,
     speed: 70,
     reward: 24,
+    nexusDamage: 2,
     color: '#00e676',
     size: 14,
     shape: 'cross',
@@ -504,6 +522,7 @@ export const ENEMY_TYPES = {
     hp: 150,
     speed: 95,
     reward: 25,
+    nexusDamage: 2,
     color: '#9c27b0',
     size: 13,
     shape: 'chevron',
@@ -520,6 +539,7 @@ export const ENEMY_TYPES = {
     armor: 0.35,
     speed: 40,
     reward: 180,
+    nexusDamage: 5,
     color: '#ff1744',
     size: 26,
     shape: 'boss_octagon',
@@ -534,6 +554,7 @@ export const ENEMY_TYPES = {
     shield: 1800,
     speed: 46,
     reward: 300,
+    nexusDamage: 7,
     color: '#d500f9',
     size: 28,
     shape: 'boss_star',
@@ -550,6 +571,7 @@ export const ENEMY_TYPES = {
     armor: 0.40,
     speed: 44,
     reward: 500,
+    nexusDamage: 10,
     color: '#00f0ff',
     size: 32,
     shape: 'boss_omega',

@@ -660,6 +660,7 @@ export class UIManager {
             <div class="guide-enemy-stats">
               <div>HP: <strong>${enemy.hp}</strong></div>
               <div>速度: <strong>${enemy.speed}</strong></div>
+              <div>拠点被害: <strong style="color: #ff2e63;">💥 -${enemy.nexusDamage || 1} HP</strong></div>
             </div>
           </div>
           <div class="guide-enemy-counter">

@@ -31,6 +31,7 @@ export class Enemy {
     this.color = def.color || '#ff0055';
     this.isBoss = def.isBoss || false;
     this.coreDrop = def.coreDrop || 0;
+    this.nexusDamage = def.nexusDamage || (this.isBoss ? 5 : 1);
 
     // Path progress
     this.distance = 0;
