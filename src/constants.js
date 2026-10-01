@@ -23,12 +23,15 @@ export const COLORS = {
   freeze: '#60d5ff'
 };
 
-// Tower Definitions
+// Tower Definitions with Detailed Roles & Tactical Strengths
 export const TOWER_TYPES = {
   pulse: {
     id: 'pulse',
     name: 'パルス砲',
-    desc: '標準的な連射エネルギー砲。低コストで信頼性が高い。',
+    role: '万能・先鋒',
+    strengths: '小型・標準敵・序盤の防衛線',
+    weaknesses: '重装甲・超高HPボス',
+    desc: '標準的な連射エネルギー砲。低コストで信頼性が高く、どの位置に置いても安定して活躍する。',
     cost: 100,
     range: 135,
     damage: 26,
@@ -66,7 +69,10 @@ export const TOWER_TYPES = {
   gatling: {
     id: 'gatling',
     name: 'バルカン',
-    desc: '至近距離の群れに強い超高速機関砲。',
+    role: '至近掃討・装甲破砕',
+    strengths: 'スウォーマー・小型の群れ・接近戦',
+    weaknesses: '長距離の敵・高機動ユニット',
+    desc: '至近距離の群れに強い超高速機関砲。進化すると敵の装甲を剥ぎ取り味方全体のダメージを底上げする。',
     cost: 130,
     range: 105,
     damage: 11,
@@ -81,7 +87,7 @@ export const TOWER_TYPES = {
     paths: {
       pathA: {
         name: 'ミニガンアレイ',
-        desc: '回転数極大。クリティカル率+30%の弾幕を展開。',
+        desc: '回転数極大。クリティカル率+35%の弾幕を展開。',
         cost: 280,
         damage: 40,
         fireRate: 9.5,
@@ -104,7 +110,10 @@ export const TOWER_TYPES = {
   sniper: {
     id: 'sniper',
     name: 'レールガン',
-    desc: '長距離単発高威力。高HPの敵を遠方から狙撃する。',
+    role: '超長距離・ボス狙撃',
+    strengths: 'ボス・重装甲タンク・遠方敵',
+    weaknesses: '大量の小型群れ・至近距離の漏れ',
+    desc: '長距離単発高威力。画面の端から高HPの敵を狙撃する。ターゲット設定を「STRONGEST」にすると効果絶大。',
     cost: 160,
     range: 220,
     damage: 90,
@@ -119,7 +128,7 @@ export const TOWER_TYPES = {
     paths: {
       pathA: {
         name: '対タイタン砲',
-        desc: 'ボス・重装甲特効。ターゲットの最大HPの6%を追加ダメージ。',
+        desc: 'ボス・重装甲特効。ターゲットの最大HPの6%を追加割合ダメージ。',
         cost: 380,
         damage: 540,
         fireRate: 0.85,
@@ -143,7 +152,10 @@ export const TOWER_TYPES = {
   cryo: {
     id: 'cryo',
     name: 'クライオ',
-    desc: '絶対零度の冷気光線。敵を減速させ足止めする。',
+    role: '範囲減速・足止め支援',
+    strengths: '高速スカウト・ボスの進行遅延',
+    weaknesses: '単体火力は控えめ（他タワー必須）',
+    desc: '絶対零度の冷気光線。敵を減速させ、周囲の攻撃タワーが敵を攻撃できる時間を劇的に引き延ばす。',
     cost: 125,
     range: 115,
     damage: 12,
@@ -183,7 +195,10 @@ export const TOWER_TYPES = {
   cannon: {
     id: 'cannon',
     name: '迫撃砲',
-    desc: '放物線を描いて榴弾を発射し、広範囲を爆破する。',
+    role: '長距離爆撃・密集粉砕',
+    strengths: '密集した集団・重装甲・ステルス炙り出し',
+    weaknesses: '弾速が遅い・高速移動する単騎敵',
+    desc: '放物線を描いて榴弾を発射し広範囲を爆破。物理装甲を貫く爆発ダメージで集団を一網打尽にする。',
     cost: 175,
     range: 160,
     damage: 65,
@@ -222,7 +237,10 @@ export const TOWER_TYPES = {
   tesla: {
     id: 'tesla',
     name: 'テスラ',
-    desc: '高圧電撃を放ち、周囲の敵へ次々と連鎖放電する。',
+    role: '連鎖電撃・シールド破壊特効',
+    strengths: 'シールドドローン(2.5倍特効)・群れ・ステルス',
+    weaknesses: '単体の超高耐久タンク',
+    desc: '高圧電撃を放ち、周囲の敵へ跳躍！【シールドに対し特大ダメージ(2.5倍)】を与えて即座に剥ぎ取るシールドキラー。',
     cost: 190,
     range: 130,
     damage: 38,
@@ -248,7 +266,7 @@ export const TOWER_TYPES = {
       },
       pathB: {
         name: 'オーバーロードEMP',
-        desc: '電撃ヒット時に敵を0.8秒スタンさせ、シールドを即座に破砕。',
+        desc: '電撃ヒット時に敵を0.8秒スタンさせ、シールドを3.5倍ダメージで瞬殺。',
         cost: 410,
         damage: 190,
         chainCount: 4,
@@ -262,7 +280,10 @@ export const TOWER_TYPES = {
   laser: {
     id: 'laser',
     name: 'レーザー',
-    desc: '持続照射ビーム。同じ敵を狙い続けるほどダメージが急増する。',
+    role: '熱線照射・巨獣融解',
+    strengths: 'ボス・重装甲タンク・単体高HP敵',
+    weaknesses: '目標が次々変わる群れ敵',
+    desc: '持続照射ビーム。同一ターゲットに当て続けるほどダメージが指数関数的に急増！装甲を無視して高耐久の巨体を溶かす。',
     cost: 210,
     range: 145,
     damage: 18, // base per tick
@@ -299,7 +320,10 @@ export const TOWER_TYPES = {
   booster: {
     id: 'booster',
     name: 'シナジーコア',
-    desc: '攻撃は行わないが、範囲内の味方タワーの能力を大幅強化する。',
+    role: '周囲支援・味方能力増幅',
+    strengths: '味方タワー密集地帯・全体火力底上げ',
+    weaknesses: '自身は一切攻撃できない（他タワー必須）',
+    desc: '攻撃は行わないが、範囲内の全味方タワーの攻撃力・速度・射程を劇的に強化する要塞の要。',
     cost: 180,
     range: 135,
     buffDamage: 0.20,
@@ -334,6 +358,49 @@ export const TOWER_TYPES = {
     }
   }
 };
+
+// Combat & Tactical Guide (Attributes, Shield breaking, armor shredding)
+export const COMBAT_GUIDE = [
+  {
+    category: '🛡️ エネルギーシールドの破壊法',
+    color: '#3d84ff',
+    desc: '青い光のリングを纏った敵。シールドが存在する間、本体HPは守られる。',
+    tips: [
+      '⚡ 【テスラコイル】はシールドに対して2.5倍〜3.5倍の特大電撃ダメージを与え、一撃で破砕できる！',
+      '⚡ 司令官スキル【EMPサージ】を発動すると、画面全体の敵のシールドを即座に半減＋4秒間スタン！',
+      '⚠️ 通常の実弾・物理攻撃はシールドに吸収されやすいため、テスラやEMPでのシールド剥がしが最優先！'
+    ]
+  },
+  {
+    category: '🛡️ ヘビー装甲（Armor）の突破法',
+    color: '#ff9900',
+    desc: 'オレンジの重装甲タンク。物理ダメージを割合でカット（25%〜40%軽減）する。',
+    tips: [
+      '💥 【迫撃砲（キャノン）】の爆発属性ダメージは装甲カットに強く、広範囲にまとめて大ダメージ！',
+      '🔥 【レーザー】は装甲を無視して熱線を照射し続け、秒間ダメージが最大600%まで加速して溶かす！',
+      '⚙️ 【バルカン（シュレッダー進化）】を当てると敵の装甲が剥がれ、周囲タワーの与ダメージが最大+50%増加！'
+    ]
+  },
+  {
+    category: '👻 ステルス（ファントム）の索敵法',
+    color: '#b84dff',
+    desc: '周期的に姿を消す紫のユニット。透明化中はタワーの直接ターゲットから外れる。',
+    tips: [
+      '⚡ 【テスラコイル】の連鎖放電は、近くの敵を経由して透明化中の敵にも強制命中する！',
+      '💥 【迫撃砲】の着弾爆風や放射能汚染ゾーンは、姿を消した敵にも巻き込みダメージを与える！'
+    ]
+  },
+  {
+    category: '🎯 ターゲット優先設定（Targeting）の活用',
+    color: '#00ff9d',
+    desc: '配置済みタワーをタップすると、標的優先順位（FIRST / LAST / STRONGEST / WEAKEST）を変更可能。',
+    tips: [
+      '🎯 【STRONGEST】: 高HPのボスや回復を行うリペアドローンをレールガンやレーザーで集中狙撃！',
+      '🎯 【LAST】: 防衛線の後ろに陣取って周囲を回復し続ける敵を背後から狙い撃つ！',
+      '🎯 【WEAKEST】: 瀕死の敵を優先して仕留め、取りこぼしを確実にゼロにする！'
+    ]
+  }
+];
 
 // Enemy Definitions
 export const ENEMY_TYPES = {

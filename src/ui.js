@@ -1,7 +1,7 @@
 // ==========================================
 // USER INTERFACE & MOBILE CONTROLLER
 // ==========================================
-import { TOWER_TYPES, MAPS, TECH_TREE, ACHIEVEMENTS, SKILLS } from './constants.js';
+import { TOWER_TYPES, MAPS, TECH_TREE, ACHIEVEMENTS, SKILLS, COMBAT_GUIDE, ENEMY_TYPES } from './constants.js';
 import { state } from './state.js';
 import { audio } from './audio.js';
 
@@ -9,6 +9,7 @@ export class UIManager {
   constructor(gameEngine) {
     this.game = gameEngine;
     this.deferredInstallPrompt = null;
+    this.selectedShopType = null;
 
     // Cache DOM Elements
     this.dom = {
@@ -20,19 +21,38 @@ export class UIManager {
       wave: document.getElementById('hud-wave'),
       waveMax: document.getElementById('hud-wave-max'),
       waveTimer: document.getElementById('hud-wave-timer'),
+      menuBtn: document.getElementById('btn-open-menu'),
+      installBtn: document.getElementById('btn-install-pwa'),
+
+      // Floating Controls Overlay (on canvas)
       speedBtn: document.getElementById('btn-speed'),
       pauseBtn: document.getElementById('btn-pause'),
       audioBtn: document.getElementById('btn-audio'),
-      installBtn: document.getElementById('btn-install-pwa'),
+      guideQuickBtn: document.getElementById('btn-open-guide-quick'),
 
       // Bottom control area
       towerShop: document.getElementById('tower-shop'),
+      towerPreviewCard: document.getElementById('tower-preview-card'),
       towerInspector: document.getElementById('tower-inspector'),
       skillsBar: document.getElementById('skills-bar'),
       waveActionBtn: document.getElementById('btn-start-wave'),
       waveActionText: document.getElementById('start-wave-text'),
 
-      // Inspector Elements
+      // Tower Preview Elements (Before Buying)
+      prevIcon: document.getElementById('prev-icon'),
+      prevName: document.getElementById('prev-name'),
+      prevRole: document.getElementById('prev-role'),
+      prevDesc: document.getElementById('prev-desc'),
+      prevStrengths: document.getElementById('prev-strengths'),
+      prevWeaknesses: document.getElementById('prev-weaknesses'),
+      prevStatDmg: document.getElementById('prev-stat-dmg'),
+      prevStatRate: document.getElementById('prev-stat-rate'),
+      prevStatRange: document.getElementById('prev-stat-range'),
+      prevCostText: document.getElementById('prev-cost-text'),
+      btnConfirmBuild: document.getElementById('btn-confirm-build'),
+      btnClosePreview: document.getElementById('btn-close-preview'),
+
+      // Inspector Elements (After Placement)
       inspectorTitle: document.getElementById('insp-title'),
       inspectorStats: document.getElementById('insp-stats'),
       targetModeBtn: document.getElementById('btn-target-mode'),
@@ -47,6 +67,8 @@ export class UIManager {
 
       // Modals
       modalBackdrop: document.getElementById('modal-backdrop'),
+      mainMenuModal: document.getElementById('modal-main-menu'),
+      guideModal: document.getElementById('modal-guide'),
       techModal: document.getElementById('modal-tech'),
       techList: document.getElementById('tech-list'),
       techCoresDisplay: document.getElementById('tech-cores-display'),
@@ -59,10 +81,11 @@ export class UIManager {
       resultDesc: document.getElementById('result-desc'),
       resultStats: document.getElementById('result-stats'),
       resultRetryBtn: document.getElementById('btn-result-retry'),
+      resultGuideBtn: document.getElementById('btn-result-guide'),
       resultSelectBtn: document.getElementById('btn-result-select'),
       resultTechBtn: document.getElementById('btn-result-tech'),
 
-      // Floating Achievement Notification Toast
+      // Toast
       toastNotification: document.getElementById('toast-notification')
     };
 
@@ -74,7 +97,6 @@ export class UIManager {
   }
 
   initPWA() {
-    // Listen for PWA installation prompt
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       this.deferredInstallPrompt = e;
@@ -130,12 +152,13 @@ export class UIManager {
           ${this.getTowerSymbol(tower.id)}
         </div>
         <div class="tower-name">${tower.name}</div>
+        <div class="tower-role-mini">${tower.role.split('・')[0]}</div>
         <div class="tower-cost">💰 ${tower.cost}</div>
       `;
       card.addEventListener('click', (e) => {
         e.stopPropagation();
         audio.ensureContext();
-        this.game.setBuildingType(tower.id);
+        this.selectTowerForPurchase(tower.id);
       });
       this.dom.towerShop.appendChild(card);
     }
@@ -153,6 +176,52 @@ export class UIManager {
       booster: '◈'
     };
     return symbols[typeId] || '⬡';
+  }
+
+  selectTowerForPurchase(typeId) {
+    if (this.selectedShopType === typeId && this.game.buildingType === typeId) {
+      // Toggle off
+      this.closeTowerPreview();
+      return;
+    }
+
+    this.selectedShopType = typeId;
+    this.game.setBuildingType(typeId);
+    this.showTowerPreview(typeId);
+  }
+
+  showTowerPreview(typeId) {
+    const def = TOWER_TYPES[typeId];
+    if (!def) return;
+
+    if (this.dom.prevIcon) {
+      this.dom.prevIcon.innerText = this.getTowerSymbol(def.id);
+      this.dom.prevIcon.style.color = def.color;
+      this.dom.prevIcon.style.textShadow = `0 0 12px ${def.color}`;
+    }
+    if (this.dom.prevName) this.dom.prevName.innerText = def.name;
+    if (this.dom.prevRole) {
+      this.dom.prevRole.innerText = `🏷️ ${def.role}`;
+      this.dom.prevRole.style.borderColor = def.color;
+      this.dom.prevRole.style.color = def.color;
+    }
+    if (this.dom.prevDesc) this.dom.prevDesc.innerText = def.desc;
+    if (this.dom.prevStrengths) this.dom.prevStrengths.innerText = def.strengths || '万能';
+    if (this.dom.prevWeaknesses) this.dom.prevWeaknesses.innerText = def.weaknesses || '特になし';
+
+    if (this.dom.prevStatDmg) this.dom.prevStatDmg.innerText = def.damage || '-';
+    if (this.dom.prevStatRate) this.dom.prevStatRate.innerText = def.fireRate ? `${def.fireRate}/s` : '-';
+    if (this.dom.prevStatRange) this.dom.prevStatRange.innerText = def.range || '-';
+    if (this.dom.prevCostText) this.dom.prevCostText.innerText = `💰 ${def.cost}`;
+
+    this.dom.towerPreviewCard?.classList.remove('hidden');
+    this.dom.towerInspector?.classList.add('hidden');
+  }
+
+  closeTowerPreview() {
+    this.selectedShopType = null;
+    this.game.setBuildingType(null);
+    this.dom.towerPreviewCard?.classList.add('hidden');
   }
 
   renderSkills() {
@@ -173,6 +242,7 @@ export class UIManager {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         audio.ensureContext();
+        this.closeTowerPreview();
         this.game.activateSkill(skill.id);
       });
       this.dom.skillsBar.appendChild(btn);
@@ -180,7 +250,7 @@ export class UIManager {
   }
 
   bindEvents() {
-    // 1. HUD Controls
+    // 1. Floating Controls (Speed, Pause, Audio, Guide)
     this.dom.speedBtn?.addEventListener('click', () => {
       audio.ensureContext();
       if (this.game.gameSpeed === 1.0) this.game.gameSpeed = 2.0;
@@ -201,6 +271,15 @@ export class UIManager {
       this.dom.audioBtn.innerText = isPlaying ? '🔊' : '🔇';
     });
 
+    this.dom.guideQuickBtn?.addEventListener('click', () => {
+      this.openGuideModal();
+    });
+
+    // 2. Main Menu Button in Header
+    this.dom.menuBtn?.addEventListener('click', () => {
+      this.openMainMenuModal();
+    });
+
     this.dom.installBtn?.addEventListener('click', async () => {
       if (this.deferredInstallPrompt) {
         this.deferredInstallPrompt.prompt();
@@ -214,18 +293,39 @@ export class UIManager {
       }
     });
 
-    // 2. Wave start button
+    // 3. Wave start button
     this.dom.waveActionBtn?.addEventListener('click', () => {
       audio.ensureContext();
       this.game.startNextWaveImmediately();
     });
 
-    // 3. Modals Open Buttons
-    document.getElementById('btn-open-tech')?.addEventListener('click', () => this.openTechModal());
-    document.getElementById('btn-open-achieve')?.addEventListener('click', () => this.openAchieveModal());
-    document.getElementById('btn-open-stages')?.addEventListener('click', () => this.openStageModal());
+    // 4. Tower Preview Card Buttons
+    this.dom.btnClosePreview?.addEventListener('click', () => {
+      this.closeTowerPreview();
+    });
 
-    // 4. Modal Close
+    // 5. Main Menu Hub Buttons
+    document.getElementById('menu-btn-stages')?.addEventListener('click', () => {
+      this.openStageModal();
+    });
+    document.getElementById('menu-btn-tech')?.addEventListener('click', () => {
+      this.openTechModal();
+    });
+    document.getElementById('menu-btn-guide')?.addEventListener('click', () => {
+      this.openGuideModal();
+    });
+    document.getElementById('menu-btn-achieve')?.addEventListener('click', () => {
+      this.openAchieveModal();
+    });
+    document.getElementById('menu-btn-resume')?.addEventListener('click', () => {
+      this.closeModals();
+    });
+    document.getElementById('menu-btn-restart')?.addEventListener('click', () => {
+      this.closeModals();
+      this.game.loadStage(this.game.currentMapId, this.game.isEndless);
+    });
+
+    // 6. Modal Close Buttons
     document.querySelectorAll('.btn-close-modal').forEach((btn) => {
       btn.addEventListener('click', () => this.closeModals());
     });
@@ -233,7 +333,18 @@ export class UIManager {
       if (e.target === this.dom.modalBackdrop) this.closeModals();
     });
 
-    // 5. Inspector Actions
+    // 7. Guide Modal Tabs
+    document.querySelectorAll('.guide-tab-btn').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        document.querySelectorAll('.guide-tab-btn').forEach((b) => b.classList.remove('active'));
+        document.querySelectorAll('.guide-tab-content').forEach((c) => c.classList.add('hidden'));
+        btn.classList.add('active');
+        const targetId = btn.dataset.tab;
+        document.getElementById(targetId)?.classList.remove('hidden');
+      });
+    });
+
+    // 8. Inspector Actions
     this.dom.targetModeBtn?.addEventListener('click', () => {
       if (this.game.selectedTower) {
         this.game.selectedTower.cycleTargetMode();
@@ -261,10 +372,13 @@ export class UIManager {
       this.game.selectTower(null);
     });
 
-    // 6. Result Modal Buttons
+    // 9. Result Modal Buttons
     this.dom.resultRetryBtn?.addEventListener('click', () => {
       this.closeModals();
       this.game.loadStage(this.game.currentMapId, this.game.isEndless);
+    });
+    this.dom.resultGuideBtn?.addEventListener('click', () => {
+      this.openGuideModal();
     });
     this.dom.resultSelectBtn?.addEventListener('click', () => {
       this.closeModals();
@@ -275,7 +389,7 @@ export class UIManager {
       this.openTechModal();
     });
 
-    // 7. Game Engine Callbacks
+    // 10. Game Engine Callbacks
     this.game.onStateChange = (gameState) => this.onGameStateUpdate(gameState);
     this.game.onGameOver = (wave) => this.showGameOverModal(wave);
     this.game.onVictory = (wave, isFlawless, coreReward) => this.showVictoryModal(wave, isFlawless, coreReward);
@@ -339,10 +453,16 @@ export class UIManager {
       }
     }
 
-    // Inspector Bottom Sheet
+    // If a tower was built or deselected, close preview
+    if (!buildingType) {
+      this.dom.towerPreviewCard?.classList.add('hidden');
+    }
+
+    // Inspector Bottom Sheet (placed tower selected)
     if (selectedTower) {
       this.dom.towerInspector?.classList.remove('hidden');
       this.dom.towerShop?.classList.add('hidden');
+      this.dom.towerPreviewCard?.classList.add('hidden');
       this.updateInspector(selectedTower);
     } else {
       this.dom.towerInspector?.classList.add('hidden');
@@ -361,7 +481,9 @@ export class UIManager {
       const dmg = Math.round(tower.effectiveDamage);
       const rate = tower.effectiveFireRate.toFixed(1);
       const rng = Math.round(tower.effectiveRange);
+      const role = tower.def.role;
       this.dom.inspectorStats.innerHTML = `
+        <div class="stat-pill role">🏷️ ${role}</div>
         <div class="stat-pill">⚔️ 威力: <span>${dmg}</span></div>
         <div class="stat-pill">⚡ 速度: <span>${rate}/s</span></div>
         <div class="stat-pill">📡 射程: <span>${rng}</span></div>
@@ -427,15 +549,138 @@ export class UIManager {
 
   closeModals() {
     this.dom.modalBackdrop?.classList.add('hidden');
+    this.dom.mainMenuModal?.classList.add('hidden');
+    this.dom.guideModal?.classList.add('hidden');
     this.dom.techModal?.classList.add('hidden');
     this.dom.achieveModal?.classList.add('hidden');
     this.dom.stageModal?.classList.add('hidden');
     this.dom.resultModal?.classList.add('hidden');
   }
 
+  openMainMenuModal() {
+    audio.ensureContext();
+    this.dom.modalBackdrop?.classList.remove('hidden');
+    this.dom.mainMenuModal?.classList.remove('hidden');
+    this.dom.guideModal?.classList.add('hidden');
+    this.dom.techModal?.classList.add('hidden');
+    this.dom.stageModal?.classList.add('hidden');
+    this.dom.achieveModal?.classList.add('hidden');
+  }
+
+  openGuideModal() {
+    audio.ensureContext();
+    this.dom.modalBackdrop?.classList.remove('hidden');
+    this.dom.mainMenuModal?.classList.add('hidden');
+    this.dom.guideModal?.classList.remove('hidden');
+    this.renderTacticalGuide();
+  }
+
+  renderTacticalGuide() {
+    // 1. Tab 1: Combat system & Shield breaking
+    const combatContainer = document.querySelector('#tab-combat .guide-cards-list');
+    if (combatContainer) {
+      combatContainer.innerHTML = '';
+      for (const guide of COMBAT_GUIDE) {
+        const card = document.createElement('div');
+        card.className = 'guide-card';
+        card.style.borderColor = guide.color;
+        card.innerHTML = `
+          <div class="guide-card-title" style="color: ${guide.color};">${guide.category}</div>
+          <div class="guide-card-desc">${guide.desc}</div>
+          <ul class="guide-tips-list">
+            ${guide.tips.map((t) => `<li>${t}</li>`).join('')}
+          </ul>
+        `;
+        combatContainer.appendChild(card);
+      }
+    }
+
+    // 2. Tab 2: Towers and Evolution list
+    const towersContainer = document.querySelector('#tab-towers .guide-towers-list');
+    if (towersContainer) {
+      towersContainer.innerHTML = '';
+      for (const key in TOWER_TYPES) {
+        const tower = TOWER_TYPES[key];
+        const card = document.createElement('div');
+        card.className = 'guide-tower-card';
+        card.style.borderColor = tower.color;
+        card.innerHTML = `
+          <div class="guide-tower-header">
+            <span class="guide-tower-icon" style="color: ${tower.color};">${this.getTowerSymbol(tower.id)}</span>
+            <div class="guide-tower-title-box">
+              <strong style="color: ${tower.color}; font-size: 15px;">${tower.name}</strong>
+              <span class="guide-role-tag">${tower.role}</span>
+            </div>
+            <span class="guide-tower-cost">💰 ${tower.cost}</span>
+          </div>
+          <div class="guide-tower-desc">${tower.desc}</div>
+          <div class="guide-tower-matchups">
+            <div class="match-item pro"><strong>◎ 得意:</strong> ${tower.strengths}</div>
+            <div class="match-item con"><strong>▲ 苦手:</strong> ${tower.weaknesses}</div>
+          </div>
+          <div class="guide-evolve-box">
+            <div class="evolve-header">特化分岐 (Lv.3 ➔ Lv.4)</div>
+            <div class="evolve-dual">
+              <div class="evolve-mini">
+                <strong>✦ Path A: ${tower.paths.pathA.name}</strong>
+                <p>${tower.paths.pathA.desc}</p>
+              </div>
+              <div class="evolve-mini">
+                <strong>✦ Path B: ${tower.paths.pathB.name}</strong>
+                <p>${tower.paths.pathB.desc}</p>
+              </div>
+            </div>
+          </div>
+        `;
+        towersContainer.appendChild(card);
+      }
+    }
+
+    // 3. Tab 3: Enemy compendium
+    const enemiesContainer = document.querySelector('#tab-enemies .guide-enemies-list');
+    if (enemiesContainer) {
+      enemiesContainer.innerHTML = '';
+      for (const key in ENEMY_TYPES) {
+        const enemy = ENEMY_TYPES[key];
+        const card = document.createElement('div');
+        card.className = `guide-enemy-card ${enemy.isBoss ? 'boss-card' : ''}`;
+        card.innerHTML = `
+          <div class="guide-enemy-header">
+            <div class="guide-enemy-shape" style="color: ${enemy.color};">${enemy.isBoss ? '👑' : '👾'}</div>
+            <div class="guide-enemy-name-box">
+              <strong style="color: ${enemy.color}; font-size: 14px;">${enemy.name}</strong>
+              <div class="guide-enemy-badges">
+                ${enemy.shield ? `<span class="badge shield">🛡️ シールド: ${enemy.shield}</span>` : ''}
+                ${enemy.armor ? `<span class="badge armor">🛡️ 装甲カット: ${Math.round(enemy.armor * 100)}%</span>` : ''}
+                ${enemy.isStealth ? `<span class="badge stealth">👻 ステルス迷彩</span>` : ''}
+                ${enemy.splitsInto ? `<span class="badge split">💥 分裂能力</span>` : ''}
+                ${enemy.healRate ? `<span class="badge heal">🚑 周囲回復</span>` : ''}
+              </div>
+            </div>
+            <div class="guide-enemy-stats">
+              <div>HP: <strong>${enemy.hp}</strong></div>
+              <div>速度: <strong>${enemy.speed}</strong></div>
+            </div>
+          </div>
+          <div class="guide-enemy-counter">
+            <strong>対策方針:</strong>
+            ${enemy.shield ? '⚡ テスラコイルやEMPサージでシールドを一瞬で破砕せよ。' : ''}
+            ${enemy.armor ? '💥 迫撃砲の爆発やレーザー熱線で装甲を突破せよ。' : ''}
+            ${enemy.isStealth ? '⚡ テスラの連鎖電撃や迫撃砲の爆風で炙り出せ。' : ''}
+            ${enemy.splitsInto ? '⚙️ 分裂直後にバルカンの連射や迫撃砲で一掃せよ。' : ''}
+            ${enemy.healRate ? '🎯 スナイパーの標的を【LAST】にして背後から最優先狙撃！' : ''}
+            ${!enemy.shield && !enemy.armor && !enemy.isStealth && !enemy.splitsInto && !enemy.healRate ? '⬡ パルス砲やバルカンの集中砲火で早期撃破。' : ''}
+          </div>
+        `;
+        enemiesContainer.appendChild(card);
+      }
+    }
+  }
+
   openTechModal() {
     audio.ensureContext();
     this.dom.modalBackdrop?.classList.remove('hidden');
+    this.dom.mainMenuModal?.classList.add('hidden');
     this.dom.techModal?.classList.remove('hidden');
     if (this.dom.techCoresDisplay) {
       this.dom.techCoresDisplay.innerText = state.data.quantumCores;
@@ -485,6 +730,7 @@ export class UIManager {
   openAchieveModal() {
     audio.ensureContext();
     this.dom.modalBackdrop?.classList.remove('hidden');
+    this.dom.mainMenuModal?.classList.add('hidden');
     this.dom.achieveModal?.classList.remove('hidden');
     this.renderAchievements();
   }
@@ -514,6 +760,7 @@ export class UIManager {
   openStageModal() {
     audio.ensureContext();
     this.dom.modalBackdrop?.classList.remove('hidden');
+    this.dom.mainMenuModal?.classList.add('hidden');
     this.dom.stageModal?.classList.remove('hidden');
     this.renderStages();
   }
@@ -564,7 +811,7 @@ export class UIManager {
       this.dom.resultTitle.className = 'result-title defeat';
     }
     if (this.dom.resultDesc) {
-      this.dom.resultDesc.innerText = '拠点の防衛ラインが突破されました。研究所でタワーを強化して再挑戦しましょう。';
+      this.dom.resultDesc.innerText = '拠点の防衛ラインが突破されました。戦術マニュアルで敵の弱点を確認し、研究所でタワーを強化して再挑戦しましょう。';
     }
     if (this.dom.resultStats) {
       this.dom.resultStats.innerHTML = `
