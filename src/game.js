@@ -63,6 +63,9 @@ export class GameEngine {
     this.onGameOver = null;
     this.onVictory = null;
 
+    this.viewportWidth = 0;
+    this.viewportHeight = 0;
+
     this.lastTime = performance.now();
   }
 
@@ -72,6 +75,19 @@ export class GameEngine {
     const mapData = MAPS.find((m) => m.id === mapId) || MAPS[0];
 
     this.map = new GameMap(mapData);
+
+    // Apply viewport dimensions immediately so map is sized and rendered
+    if (this.viewportWidth > 0 && this.viewportHeight > 0) {
+      this.map.resize(this.viewportWidth, this.viewportHeight);
+    } else if (this.canvas) {
+      const rect = this.canvas.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        this.viewportWidth = rect.width;
+        this.viewportHeight = rect.height;
+        this.map.resize(rect.width, rect.height);
+      }
+    }
+
     this.towers = [];
     this.enemies = [];
     this.projectiles = [];
@@ -111,6 +127,8 @@ export class GameEngine {
   }
 
   resize(w, h) {
+    this.viewportWidth = w;
+    this.viewportHeight = h;
     if (this.map) {
       this.map.resize(w, h);
       // Reposition existing towers to match resized grid cells
@@ -583,6 +601,13 @@ export class GameEngine {
   render() {
     const { ctx, canvas } = this;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Failsafe: Ensure map is properly sized if somehow zero
+    if (this.map && (!this.map.width || !this.map.height)) {
+      const w = this.viewportWidth || canvas.clientWidth || 400;
+      const h = this.viewportHeight || canvas.clientHeight || 600;
+      this.resize(w, h);
+    }
 
     ctx.save();
     // Apply Screen Shake
