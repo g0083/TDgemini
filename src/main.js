@@ -6,13 +6,30 @@ import { GameEngine } from './game.js';
 import { UIManager } from './ui.js';
 import { audio } from './audio.js';
 
-// Register Service Worker for PWA
+// Register Service Worker for PWA (Production only, avoid caching issues on localhost)
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').then(
-      (reg) => console.log('PWA ServiceWorker registered with scope:', reg.scope),
-      (err) => console.warn('ServiceWorker registration failed:', err)
-    );
+    const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+    if (isLocalhost) {
+      // Unregister any active service workers on localhost to prevent stale cache issues
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        for (const reg of registrations) {
+          reg.unregister();
+        }
+      });
+      if ('caches' in window) {
+        caches.keys().then((names) => {
+          for (const name of names) {
+            caches.delete(name);
+          }
+        });
+      }
+    } else {
+      navigator.serviceWorker.register('./sw.js').then(
+        (reg) => console.log('PWA ServiceWorker registered with scope:', reg.scope),
+        (err) => console.warn('ServiceWorker registration failed:', err)
+      );
+    }
   });
 }
 
