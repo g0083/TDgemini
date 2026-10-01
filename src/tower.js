@@ -474,63 +474,566 @@ export class Tower {
     ctx.save();
     ctx.scale(s, s);
 
+    // --- A. Base Pedestal (Unique silhouette per tower type) ---
     ctx.save();
-    ctx.fillStyle = '#0d1527';
-    ctx.strokeStyle = color;
     ctx.shadowColor = color;
-    ctx.shadowBlur = isSelected ? 12 : 5;
-    ctx.lineWidth = 2;
+    ctx.shadowBlur = isSelected ? 14 : 6;
 
-    ctx.beginPath();
-    for (let i = 0; i < 6; i++) {
-      const a = (i * Math.PI) / 3;
-      const px = Math.cos(a) * 18;
-      const py = Math.sin(a) * 18;
-      if (i === 0) ctx.moveTo(px, py);
-      else ctx.lineTo(px, py);
+    switch (this.typeId) {
+      case 'gatling': {
+        // Heavy Circular Gear Base
+        ctx.fillStyle = '#0b1424';
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, 0, 16.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Perimeter gear notches (6 teeth)
+        ctx.fillStyle = color;
+        for (let i = 0; i < 6; i++) {
+          const a = (i * Math.PI) / 3;
+          ctx.fillRect(Math.cos(a) * 16 - 2, Math.sin(a) * 16 - 2, 4, 4);
+        }
+        break;
+      }
+
+      case 'sniper': {
+        // Sleek Diamond Aerodynamic Base with lateral heat-sink fins
+        ctx.fillStyle = '#08111e';
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, -18);
+        ctx.lineTo(16, 0);
+        ctx.lineTo(0, 18);
+        ctx.lineTo(-16, 0);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Lateral radiator cooling fins
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(-11, -5); ctx.lineTo(-15, -5);
+        ctx.moveTo(-11, 0); ctx.lineTo(-16, 0);
+        ctx.moveTo(-11, 5); ctx.lineTo(-15, 5);
+        ctx.moveTo(11, -5); ctx.lineTo(15, -5);
+        ctx.moveTo(11, 0); ctx.lineTo(16, 0);
+        ctx.moveTo(11, 5); ctx.lineTo(15, 5);
+        ctx.stroke();
+        break;
+      }
+
+      case 'cannon': {
+        // Heavy Reinforced Square Bunker Fortress Base
+        ctx.fillStyle = '#101728';
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2.2;
+        ctx.strokeRect(-16, -16, 32, 32);
+        ctx.fillRect(-16, -16, 32, 32);
+
+        // 4 Corner Hydraulic Stabilizer Studs
+        ctx.fillStyle = color;
+        ctx.fillRect(-18, -18, 5, 5);
+        ctx.fillRect(13, -18, 5, 5);
+        ctx.fillRect(-18, 13, 5, 5);
+        ctx.fillRect(13, 13, 5, 5);
+        break;
+      }
+
+      case 'tesla': {
+        // High-Voltage Tripod Pylon Base
+        ctx.fillStyle = '#120f26';
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        for (let i = 0; i < 3; i++) {
+          const a = (i * Math.PI * 2) / 3 - Math.PI / 2;
+          const px = Math.cos(a) * 18;
+          const py = Math.sin(a) * 18;
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // 3 Glowing Capacitor Spheres on Tripod Feet
+        ctx.fillStyle = '#ffffff';
+        for (let i = 0; i < 3; i++) {
+          const a = (i * Math.PI * 2) / 3 - Math.PI / 2;
+          ctx.beginPath();
+          ctx.arc(Math.cos(a) * 14, Math.sin(a) * 14, 3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        break;
+      }
+
+      case 'laser': {
+        // Precision Pentagonal Optical Platform
+        ctx.fillStyle = '#190e24';
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        for (let i = 0; i < 5; i++) {
+          const a = (i * Math.PI * 2) / 5 - Math.PI / 2;
+          const px = Math.cos(a) * 17.5;
+          const py = Math.sin(a) * 17.5;
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Inner Calibration Ring
+        ctx.strokeStyle = 'rgba(255, 0, 119, 0.4)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(0, 0, 10, 0, Math.PI * 2);
+        ctx.stroke();
+        break;
+      }
+
+      case 'cryo': {
+        // Hexagonal Cryo-Vat with 3 Coolant Exhaust Vents
+        ctx.fillStyle = '#0a1824';
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        for (let i = 0; i < 6; i++) {
+          const a = (i * Math.PI) / 3;
+          const px = Math.cos(a) * 17;
+          const py = Math.sin(a) * 17;
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // 3 Frost Nozzle Vents
+        ctx.fillStyle = '#60d5ff';
+        for (let i = 0; i < 3; i++) {
+          const a = (i * Math.PI * 2) / 3;
+          ctx.beginPath();
+          ctx.arc(Math.cos(a) * 12.5, Math.sin(a) * 12.5, 2.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        break;
+      }
+
+      case 'booster': {
+        // Concentric Quantum Holographic Circuit Rings
+        ctx.fillStyle = '#081c14';
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.arc(0, 0, 16.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.strokeStyle = 'rgba(123, 255, 0, 0.4)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.arc(0, 0, 11, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        break;
+      }
+
+      default: {
+        // Pulse: Classic Military Octagonal Chassis
+        ctx.fillStyle = '#0d1527';
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        for (let i = 0; i < 8; i++) {
+          const a = (i * Math.PI) / 4;
+          const px = Math.cos(a) * 17;
+          const py = Math.sin(a) * 17;
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // 4 Corner Bolt Studs
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.fillRect(-12, -12, 2.5, 2.5);
+        ctx.fillRect(9.5, -12, 2.5, 2.5);
+        ctx.fillRect(-12, 9.5, 2.5, 2.5);
+        ctx.fillRect(9.5, 9.5, 2.5, 2.5);
+        break;
+      }
     }
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
+    ctx.restore();
 
-    // 5. Turret Barrel (Rotates toward target)
+    // --- B. Turret Weapon Architecture & Articulated Mechanisms ---
+    ctx.save();
     ctx.rotate(this.angle);
 
     ctx.fillStyle = color;
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 1;
 
-    if (this.def.type === 'booster') {
-      // Rotating Tech Prism
-      ctx.rotate(this.pulseAngle);
-      ctx.fillRect(-6, -6, 12, 12);
-      ctx.strokeRect(-6, -6, 12, 12);
-    } else if (this.def.type === 'sniper') {
-      // Long high tech barrel with recoil
-      const barrelLen = 24 - this.recoil;
-      ctx.fillRect(0, -2.5, barrelLen, 5);
-      ctx.strokeRect(0, -2.5, barrelLen, 5);
-    } else if (this.def.type === 'gatling') {
-      // Multi-barrel
-      ctx.fillRect(0, -5, 15 - this.recoil, 3);
-      ctx.fillRect(0, 2, 15 - this.recoil, 3);
-    } else if (this.def.type === 'cannon') {
-      // Heavy wide barrel
-      ctx.fillRect(0, -4.5, 14 - this.recoil, 9);
-      ctx.strokeRect(0, -4.5, 14 - this.recoil, 9);
-    } else {
-      // Standard Turret
-      ctx.fillRect(0, -3, 16 - this.recoil, 6);
-      ctx.strokeRect(0, -3, 16 - this.recoil, 6);
+    switch (this.typeId) {
+      case 'gatling': {
+        // Rotary Minigun: Rear Cylindrical Ammo Drum + 3-Barrel Cluster + Muzzle Ring
+        // Ammo Drum at rear
+        ctx.fillStyle = '#1e293b';
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.2;
+        ctx.fillRect(-11, -6, 6, 12);
+        ctx.strokeRect(-11, -6, 6, 12);
+
+        // Ammo Feeding Belt line
+        ctx.strokeStyle = '#ffd000';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(-5, -3); ctx.lineTo(-1, -3);
+        ctx.moveTo(-5, 0); ctx.lineTo(-1, 0);
+        ctx.moveTo(-5, 3); ctx.lineTo(-1, 3);
+        ctx.stroke();
+
+        // 3 Barrels Spinning
+        const spin = Math.sin(this.pulseAngle * 12) * 1.2;
+        ctx.fillStyle = color;
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 0.8;
+        // Top barrel
+        ctx.fillRect(2, -5.5 + spin * 0.4, 14, 2.5);
+        ctx.strokeRect(2, -5.5 + spin * 0.4, 14, 2.5);
+        // Middle barrel (with recoil)
+        ctx.fillRect(2, -1.2, 16 - this.recoil * 0.6, 2.5);
+        ctx.strokeRect(2, -1.2, 16 - this.recoil * 0.6, 2.5);
+        // Bottom barrel
+        ctx.fillRect(2, 3 - spin * 0.4, 14, 2.5);
+        ctx.strokeRect(2, 3 - spin * 0.4, 14, 2.5);
+
+        // Muzzle Barrel Bracket Collar
+        ctx.fillStyle = '#0f172a';
+        ctx.strokeStyle = '#ffffff';
+        ctx.fillRect(12, -6.5, 2.5, 13);
+        ctx.strokeRect(12, -6.5, 2.5, 13);
+
+        // Turret Rotor Hub
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(0, 0, 5, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      }
+
+      case 'sniper': {
+        // Railgun: Massive Twin Electromagnetic Rails + Neon Plasma Core Accelerator
+        // Rear Hydraulic Breach
+        ctx.fillStyle = '#0d1829';
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.5;
+        ctx.fillRect(-8, -5, 8, 10);
+        ctx.strokeRect(-8, -5, 8, 10);
+
+        // Top Rail
+        const railLen = 27 - this.recoil;
+        ctx.fillStyle = color;
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1;
+        ctx.fillRect(0, -4.2, railLen, 2.6);
+        ctx.strokeRect(0, -4.2, railLen, 2.6);
+
+        // Bottom Rail
+        ctx.fillRect(0, 1.6, railLen, 2.6);
+        ctx.strokeRect(0, 1.6, railLen, 2.6);
+
+        // Glowing High-Energy Plasma Conduit running between rails
+        ctx.fillStyle = '#00ffcc';
+        ctx.shadowColor = '#00ffcc';
+        ctx.shadowBlur = 8;
+        ctx.fillRect(1, -1.2, railLen - 3, 2.4);
+        ctx.shadowBlur = 0;
+
+        // Electromagnetic Capacitor Rings
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(8, -5.5, 2, 11);
+        ctx.fillRect(17, -5.5, 2, 11);
+
+        // Sleek Sniper Sensor Dome
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(0, 0, 4.5, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      }
+
+      case 'cannon': {
+        // Heavy Siege Howitzer: Massive Thick Mortar Tube + Rear Counterweight + Reinforced Muzzle Ring
+        // Rear Counterweight
+        ctx.fillStyle = '#0d1322';
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.5;
+        ctx.fillRect(-10, -7, 9, 14);
+        ctx.strokeRect(-10, -7, 9, 14);
+
+        // Main Heavy Mortar Tube (with recoil)
+        const tubeLen = 15 - this.recoil;
+        ctx.fillStyle = color;
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1;
+        ctx.fillRect(-1, -5.5, tubeLen, 11);
+        ctx.strokeRect(-1, -5.5, tubeLen, 11);
+
+        // Reinforced Heavy Muzzle Ring Collar
+        ctx.fillStyle = '#ff6200';
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.2;
+        ctx.fillRect(tubeLen - 1, -7.5, 4, 15);
+        ctx.strokeRect(tubeLen - 1, -7.5, 4, 15);
+
+        // Bore Hole
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(tubeLen + 2.5, -4, 1.5, 8);
+
+        // Heavy Elevation Pivot Bolts
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(0, -6, 2, 0, Math.PI * 2);
+        ctx.arc(0, 6, 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Center Dome
+        ctx.beginPath();
+        ctx.arc(0, 0, 5, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      }
+
+      case 'cryo': {
+        // Cryogenic Projector: Nitrogen Pressure Vessel + Flared Frost Nozzle + Condensation Rings
+        // Spherical Cryo Core Vessel
+        ctx.fillStyle = '#0f2738';
+        ctx.strokeStyle = '#60d5ff';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, 0, 7.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Flared Frost Emitter Nozzle
+        ctx.fillStyle = color;
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(5, -4);
+        ctx.lineTo(16, -7);
+        ctx.lineTo(16, 7);
+        ctx.lineTo(5, 4);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Cryo Condensation Emission Rings
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(15, 0, 4.5, -Math.PI / 2, Math.PI / 2);
+        ctx.stroke();
+
+        // Glowing Frost Core
+        ctx.fillStyle = '#ffffff';
+        ctx.shadowColor = '#60d5ff';
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+        ctx.arc(0, 0, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        break;
+      }
+
+      case 'tesla': {
+        // High-Voltage Resonant Tesla Coil: Vertical Transformer Column + 3 Toroidal Induction Rings + Plasma Orb
+        // Base Conduit Hub
+        ctx.fillStyle = '#1c1333';
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(0, 0, 9, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // 3 Stacked Toroidal Induction Rings
+        ctx.strokeStyle = '#d500f9';
+        ctx.lineWidth = 2.2;
+        ctx.beginPath();
+        ctx.arc(0, 0, 7, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(0, 0, 4.8, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // 3 Rotating Discharge Probes
+        const rot = this.pulseAngle * 2;
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        for (let i = 0; i < 3; i++) {
+          const a = rot + (i * Math.PI * 2) / 3;
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(Math.cos(a) * 14, Math.sin(a) * 14);
+          ctx.stroke();
+
+          // Electrode tip
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(Math.cos(a) * 14 - 1.5, Math.sin(a) * 14 - 1.5, 3, 3);
+        }
+
+        // Top Plasma Discharge Orb
+        ctx.fillStyle = '#ffffff';
+        ctx.shadowColor = '#b84dff';
+        ctx.shadowBlur = 12;
+        ctx.beginPath();
+        ctx.arc(0, 0, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        break;
+      }
+
+      case 'laser': {
+        // Thermal Beam Projector: Optical Focus Chamber + Twin Wing Prisms + Exposed Ruby Crystal
+        // Optical Core Chamber
+        ctx.fillStyle = '#22081f';
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.5;
+        ctx.fillRect(-6, -6, 12, 12);
+        ctx.strokeRect(-6, -6, 12, 12);
+
+        // Center Beam Emitter Tube
+        ctx.fillStyle = color;
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1;
+        ctx.fillRect(4, -3, 14, 6);
+        ctx.strokeRect(4, -3, 14, 6);
+
+        // Twin Optical Focus Wings (Angled Prisms)
+        ctx.fillStyle = 'rgba(255, 0, 119, 0.4)';
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.2;
+        // Top Wing
+        ctx.beginPath();
+        ctx.moveTo(0, -6);
+        ctx.lineTo(16, -8.5);
+        ctx.lineTo(12, -3);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        // Bottom Wing
+        ctx.beginPath();
+        ctx.moveTo(0, 6);
+        ctx.lineTo(16, 8.5);
+        ctx.lineTo(12, 3);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Forward Optical Lens Aperture
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(17, 0, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Exposed Glowing Ruby Laser Core Gem
+        ctx.fillStyle = '#ffffff';
+        ctx.shadowColor = '#ff0077';
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.arc(0, 0, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        break;
+      }
+
+      case 'booster': {
+        // Quantum Levitating Core: Rotating Crystal Octahedron + 3 Orbiting Satellite Nodes
+        ctx.rotate(this.pulseAngle);
+
+        // Central Quantum Octahedron Crystal
+        ctx.fillStyle = color;
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 8;
+        ctx.fillRect(-6.5, -6.5, 13, 13);
+        ctx.strokeRect(-6.5, -6.5, 13, 13);
+        ctx.shadowBlur = 0;
+
+        // Inner White Core
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(-3, -3, 6, 6);
+
+        // 3 Orbiting Satellite Data Nodes
+        ctx.fillStyle = '#ffffff';
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1;
+        for (let i = 0; i < 3; i++) {
+          const a = (i * Math.PI * 2) / 3 - this.pulseAngle * 2.5;
+          const sx = Math.cos(a) * 13.5;
+          const sy = Math.sin(a) * 13.5;
+          ctx.beginPath();
+          ctx.arc(sx, sy, 2.2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        }
+        break;
+      }
+
+      default: {
+        // Pulse: Double-Stepped Combat Assault Cannon + Muzzle Brake
+        // Base Turret Housing Block
+        ctx.fillStyle = '#101c33';
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.2;
+        ctx.fillRect(-5, -5.5, 10, 11);
+        ctx.strokeRect(-5, -5.5, 10, 11);
+
+        // Stepped Forward Barrel (with recoil)
+        const barrelLen = 14 - this.recoil;
+        ctx.fillStyle = color;
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1;
+        ctx.fillRect(4, -3.2, barrelLen, 6.4);
+        ctx.strokeRect(4, -3.2, barrelLen, 6.4);
+
+        // Heavy Muzzle Brake
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(4 + barrelLen - 2, -4.5, 3.5, 9);
+
+        // Center Glowing Energy Line
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, -1, 10, 2);
+
+        // Turret Center Dome
+        ctx.beginPath();
+        ctx.arc(0, 0, 5.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Cyan Sensor Dot
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(0, 0, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      }
     }
 
-    // Turret Center Dome
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.arc(0, 0, 6, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.restore(); // restores barrel rotation & pedestal
+    ctx.restore(); // restores barrel rotation & weapon state
 
     // 6. Level Stars / Badges (unrotated)
     if (this.level > 1) {

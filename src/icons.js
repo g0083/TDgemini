@@ -55,67 +55,223 @@ export const ICONS = {
   stealth: `<svg class="icon" viewBox="0 0 24 24"><path d="M9 10h.01M15 10h.01M12 2a8 8 0 0 0-8 8v12l3-3 2.5 2.5L12 19l2.5 2.5L17 19l3 3V10a8 8 0 0 0-8-8z"/></svg>`
 };
 
-// Map-accurate Vector SVG generator for towers (Hex pedestal + articulated turret barrel + center dome)
+// Map-accurate Vector SVG generator for towers (Unique chassis silhouettes, articulated mechanisms, specialized barrels)
 export function getTowerVisualSvg(typeId, color = '#00f0ff', size = 36) {
-  let barrel = '';
+  let content = '';
+
   switch (typeId) {
-    case 'pulse':
-      barrel = `<rect x="20" y="19" width="16" height="6" rx="1.5" fill="${color}" stroke="#ffffff" stroke-width="1"/>`;
-      break;
     case 'gatling':
-      barrel = `
-        <rect x="20" y="17" width="15" height="3.5" rx="1" fill="${color}" stroke="#ffffff" stroke-width="0.8"/>
-        <rect x="20" y="23.5" width="15" height="3.5" rx="1" fill="${color}" stroke="#ffffff" stroke-width="0.8"/>
+      // Heavy Industrial Rotary Minigun: Gear-toothed base + rear ammo drum + feeding belt + 3 barrels + muzzle bracket
+      content = `
+        <!-- Circular Gear Base with 6 perimeter teeth -->
+        <circle cx="22" cy="22" r="14.5" fill="#0b1424" stroke="${color}" stroke-width="2"/>
+        <rect x="34.5" y="20.5" width="3" height="3" fill="${color}"/>
+        <rect x="27.5" y="32.5" width="3" height="3" fill="${color}"/>
+        <rect x="13.5" y="32.5" width="3" height="3" fill="${color}"/>
+        <rect x="6.5" y="20.5" width="3" height="3" fill="${color}"/>
+        <rect x="13.5" y="8.5" width="3" height="3" fill="${color}"/>
+        <rect x="27.5" y="8.5" width="3" height="3" fill="${color}"/>
+
+        <!-- Rear Cylindrical Ammo Drum -->
+        <rect x="11" y="16" width="6" height="12" rx="1" fill="#1e293b" stroke="${color}" stroke-width="1.2"/>
+        <!-- Ammo Feeding Belt Lines -->
+        <line x1="17" y1="19" x2="21" y2="19" stroke="#ffd000" stroke-width="1.5"/>
+        <line x1="17" y1="22" x2="21" y2="22" stroke="#ffd000" stroke-width="1.5"/>
+        <line x1="17" y1="25" x2="21" y2="25" stroke="#ffd000" stroke-width="1.5"/>
+
+        <!-- 3 Spinning Barrels -->
+        <rect x="21" y="17" width="14" height="2.5" rx="0.8" fill="${color}" stroke="#ffffff" stroke-width="0.8"/>
+        <rect x="21" y="20.7" width="16" height="2.5" rx="0.8" fill="${color}" stroke="#ffffff" stroke-width="0.8"/>
+        <rect x="21" y="24.5" width="14" height="2.5" rx="0.8" fill="${color}" stroke="#ffffff" stroke-width="0.8"/>
+        <!-- Muzzle Bracket Ring -->
+        <rect x="33" y="16" width="2.5" height="12" rx="0.5" fill="#0f172a" stroke="#ffffff" stroke-width="0.8"/>
+
+        <!-- Rotor Hub -->
+        <circle cx="22" cy="22" r="4.5" fill="#ffffff"/>
+        <circle cx="22" cy="22" r="2" fill="${color}"/>
       `;
       break;
+
     case 'sniper':
-      barrel = `
-        <rect x="20" y="19.5" width="22" height="5" rx="1" fill="${color}" stroke="#ffffff" stroke-width="1"/>
-        <line x1="28" y1="18.5" x2="28" y2="25.5" stroke="#ffffff" stroke-width="1.2"/>
+      // Stealth Railgun: Aerodynamic diamond chassis + cooling fins + twin electromagnetic rails + glowing plasma conduit
+      content = `
+        <!-- Diamond Base -->
+        <polygon points="22,6 38,22 22,38 6,22" fill="#08111e" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>
+        <!-- Radiator Cooling Fins -->
+        <line x1="11" y1="18" x2="7" y2="18" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+        <line x1="11" y1="22" x2="6" y2="22" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+        <line x1="11" y1="26" x2="7" y2="26" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+        <line x1="33" y1="18" x2="37" y2="18" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+        <line x1="33" y1="22" x2="38" y2="22" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+        <line x1="33" y1="26" x2="37" y2="26" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+
+        <!-- Rear Hydraulic Breach -->
+        <rect x="14" y="17.5" width="7" height="9" rx="1" fill="#0d1829" stroke="${color}" stroke-width="1.2"/>
+        <!-- Twin High-Velocity Accelerator Rails -->
+        <rect x="21" y="17.8" width="20" height="2.5" rx="0.8" fill="${color}" stroke="#ffffff" stroke-width="0.9"/>
+        <rect x="21" y="23.7" width="20" height="2.5" rx="0.8" fill="${color}" stroke="#ffffff" stroke-width="0.9"/>
+        <!-- Glowing Cyan Plasma Conduit -->
+        <rect x="21" y="21" width="18" height="2" fill="#00ffcc"/>
+        <!-- Electromagnetic Capacitor Rings -->
+        <rect x="28" y="16.5" width="2" height="11" fill="#ffffff"/>
+        <rect x="35" y="16.5" width="2" height="11" fill="#ffffff"/>
+
+        <!-- Sniper Sensor Dome -->
+        <circle cx="22" cy="22" r="4" fill="#ffffff"/>
+        <circle cx="22" cy="22" r="2" fill="${color}"/>
       `;
       break;
+
     case 'cannon':
-      barrel = `
-        <rect x="20" y="17.5" width="14" height="9" rx="1.5" fill="${color}" stroke="#ffffff" stroke-width="1"/>
-        <line x1="24" y1="17.5" x2="24" y2="26.5" stroke="#0d1527" stroke-width="1.5"/>
+      // Heavy Siege Howitzer: Reinforced square bunker + 4 stabilizer studs + thick mortar barrel + muzzle collar + pivot bolts
+      content = `
+        <!-- Heavy Square Fortress Bunker -->
+        <rect x="7" y="7" width="30" height="30" rx="2" fill="#101728" stroke="${color}" stroke-width="2.2"/>
+        <!-- 4 Corner Hydraulic Stabilizer Studs -->
+        <rect x="5" y="5" width="5" height="5" fill="${color}"/>
+        <rect x="34" y="5" width="5" height="5" fill="${color}"/>
+        <rect x="5" y="34" width="5" height="5" fill="${color}"/>
+        <rect x="34" y="34" width="5" height="5" fill="${color}"/>
+
+        <!-- Rear Counterweight -->
+        <rect x="12" y="15" width="8" height="14" rx="1" fill="#0d1322" stroke="${color}" stroke-width="1.2"/>
+        <!-- Massive Mortar Barrel Tube -->
+        <rect x="19" y="16.5" width="14" height="11" rx="1.5" fill="${color}" stroke="#ffffff" stroke-width="1"/>
+        <!-- Reinforced Heavy Muzzle Collar -->
+        <rect x="31" y="14.5" width="4" height="15" rx="1" fill="#ff6200" stroke="#ffffff" stroke-width="1.2"/>
+        <rect x="34" y="18" width="2" height="8" fill="#000000"/>
+
+        <!-- Elevation Pivot Bolts -->
+        <circle cx="22" cy="16" r="1.8" fill="#ffffff"/>
+        <circle cx="22" cy="28" r="1.8" fill="#ffffff"/>
+        <!-- Center Heavy Dome -->
+        <circle cx="22" cy="22" r="4.5" fill="#ffffff"/>
       `;
       break;
-    case 'booster':
-      barrel = `<rect x="16" y="16" width="12" height="12" rx="1.5" fill="${color}" stroke="#ffffff" stroke-width="1.2" transform="rotate(45 22 22)"/>`;
-      break;
+
     case 'cryo':
-      barrel = `
-        <rect x="20" y="19" width="14" height="6" rx="2" fill="${color}" stroke="#ffffff" stroke-width="1"/>
-        <circle cx="36" cy="22" r="3" fill="none" stroke="#60d5ff" stroke-width="1.5"/>
+      // Cryogenic Projector: Hexagonal pod with 3 coolant exhaust vents + pressure vessel + flared frost nozzle
+      content = `
+        <!-- Hexagonal Cryo Pod -->
+        <polygon points="36,22 29,34 15,34 8,22 15,10 29,10" fill="#0a1824" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>
+        <!-- 3 Frost Coolant Exhaust Vents -->
+        <circle cx="29" cy="22" r="2.5" fill="#60d5ff"/>
+        <circle cx="18.5" cy="31" r="2.5" fill="#60d5ff"/>
+        <circle cx="18.5" cy="13" r="2.5" fill="#60d5ff"/>
+
+        <!-- Spherical Cryo Pressure Vessel -->
+        <circle cx="22" cy="22" r="7.5" fill="#0f2738" stroke="#60d5ff" stroke-width="2"/>
+        <!-- Flared Frost Emitter Nozzle -->
+        <polygon points="26,18 37,15 37,29 26,26" fill="${color}" stroke="#ffffff" stroke-width="1" stroke-linejoin="round"/>
+        <!-- Condensation Emission Ring -->
+        <path d="M 37 18 A 4 4 0 0 1 37 26" fill="none" stroke="#ffffff" stroke-width="1.5"/>
+
+        <!-- Glowing Frost Core -->
+        <circle cx="22" cy="22" r="3.5" fill="#ffffff"/>
       `;
       break;
+
     case 'tesla':
-      barrel = `
-        <line x1="20" y1="22" x2="34" y2="22" stroke="${color}" stroke-width="3" stroke-linecap="round"/>
-        <circle cx="28" cy="22" r="4.5" fill="none" stroke="#ffffff" stroke-width="1.2"/>
-        <circle cx="35" cy="22" r="3" fill="${color}" stroke="#ffffff" stroke-width="1"/>
+      // High-Voltage Resonant Pylon: Tripod pylon base + 3 foot capacitors + 3 toroidal induction coils + 3 discharge electrodes
+      content = `
+        <!-- Tripod Pylon Base -->
+        <polygon points="22,7 36,31 8,31" fill="#120f26" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>
+        <!-- 3 Glowing Foot Capacitor Spheres -->
+        <circle cx="22" cy="10" r="3" fill="#ffffff"/>
+        <circle cx="33" cy="28.5" r="3" fill="#ffffff"/>
+        <circle cx="11" cy="28.5" r="3" fill="#ffffff"/>
+
+        <!-- Base Conduit Hub -->
+        <circle cx="22" cy="22" r="8" fill="#1c1333" stroke="${color}" stroke-width="1.5"/>
+        <!-- Stacked Toroidal Induction Rings -->
+        <circle cx="22" cy="22" r="6" fill="none" stroke="#d500f9" stroke-width="1.8"/>
+        <circle cx="22" cy="22" r="4.2" fill="none" stroke="#ffffff" stroke-width="1.2"/>
+
+        <!-- 3 Radial Discharge Electrodes -->
+        <line x1="22" y1="22" x2="34" y2="22" stroke="${color}" stroke-width="2"/>
+        <rect x="33" y="20.5" width="3" height="3" fill="#ffffff"/>
+        <line x1="22" y1="22" x2="16" y2="12" stroke="${color}" stroke-width="2"/>
+        <rect x="14.5" y="10.5" width="3" height="3" fill="#ffffff"/>
+        <line x1="22" y1="22" x2="16" y2="32" stroke="${color}" stroke-width="2"/>
+        <rect x="14.5" y="30.5" width="3" height="3" fill="#ffffff"/>
+
+        <!-- Top Plasma Discharge Orb -->
+        <circle cx="22" cy="22" r="3.5" fill="#ffffff"/>
       `;
       break;
+
     case 'laser':
-      barrel = `
-        <polygon points="20,18 35,20.5 35,23.5 20,26" fill="${color}" stroke="#ffffff" stroke-width="1"/>
+      // Precision Beam Projector: Pentagonal optical platform + calibration ring + optical chamber + focus wing prisms + ruby gem
+      content = `
+        <!-- Precision Pentagonal Platform -->
+        <polygon points="22,6 36.5,16.5 31,33.5 13,33.5 7.5,16.5" fill="#190e24" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>
+        <!-- Optical Calibration Ring -->
+        <circle cx="22" cy="22" r="9" fill="none" stroke="rgba(255, 0, 119, 0.4)" stroke-width="1"/>
+
+        <!-- Optical Core Chamber -->
+        <rect x="17" y="17" width="10" height="10" rx="1" fill="#22081f" stroke="${color}" stroke-width="1.2"/>
+        <!-- Center Beam Emitter Tube -->
+        <rect x="24" y="20" width="13" height="4" rx="0.8" fill="${color}" stroke="#ffffff" stroke-width="0.9"/>
+        <!-- Twin Optical Focus Wings (Angled Prisms) -->
+        <polygon points="21,17 35,14 32,19" fill="rgba(255, 0, 119, 0.4)" stroke="${color}" stroke-width="1" stroke-linejoin="round"/>
+        <polygon points="21,27 35,30 32,25" fill="rgba(255, 0, 119, 0.4)" stroke="${color}" stroke-width="1" stroke-linejoin="round"/>
+        <!-- Forward Optical Lens Aperture -->
         <circle cx="36" cy="22" r="2.5" fill="#ffffff"/>
+
+        <!-- Exposed Glowing Ruby Laser Core Gem -->
+        <circle cx="22" cy="22" r="3.8" fill="#ffffff"/>
       `;
       break;
+
+    case 'booster':
+      // Holographic Synergy Core: Concentric circuit rings + rotated quantum crystal octahedron + 3 orbiting satellite nodes
+      content = `
+        <!-- Concentric Quantum Holographic Circuit Rings -->
+        <circle cx="22" cy="22" r="15" fill="#081c14" stroke="${color}" stroke-width="2"/>
+        <circle cx="22" cy="22" r="10.5" fill="none" stroke="rgba(123, 255, 0, 0.5)" stroke-width="1.2" stroke-dasharray="3,3"/>
+
+        <!-- Central Quantum Octahedron Crystal -->
+        <rect x="16.5" y="16.5" width="11" height="11" rx="1" fill="${color}" stroke="#ffffff" stroke-width="1.5" transform="rotate(45 22 22)"/>
+        <!-- Inner White Core -->
+        <rect x="19.5" y="19.5" width="5" height="5" fill="#ffffff" transform="rotate(45 22 22)"/>
+
+        <!-- 3 Orbiting Satellite Data Nodes -->
+        <circle cx="34" cy="22" r="2.5" fill="#ffffff" stroke="${color}" stroke-width="1"/>
+        <circle cx="16" cy="11.5" r="2.5" fill="#ffffff" stroke="${color}" stroke-width="1"/>
+        <circle cx="16" cy="32.5" r="2.5" fill="#ffffff" stroke="${color}" stroke-width="1"/>
+      `;
+      break;
+
     default:
-      barrel = `<rect x="20" y="19" width="16" height="6" rx="1.5" fill="${color}" stroke="#ffffff" stroke-width="1"/>`;
+      // Pulse: Military Octagonal chassis with 4 corner studs + stepped assault cannon + muzzle brake
+      content = `
+        <!-- Military Octagonal Chassis -->
+        <polygon points="36,16 36,28 28,36 16,36 8,28 8,16 16,8 28,8" fill="#0d1527" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>
+        <!-- 4 Corner Hydraulic Studs -->
+        <rect x="11" y="11" width="2.5" height="2.5" fill="rgba(255,255,255,0.7)"/>
+        <rect x="30.5" y="11" width="2.5" height="2.5" fill="rgba(255,255,255,0.7)"/>
+        <rect x="11" y="30.5" width="2.5" height="2.5" fill="rgba(255,255,255,0.7)"/>
+        <rect x="30.5" y="30.5" width="2.5" height="2.5" fill="rgba(255,255,255,0.7)"/>
+
+        <!-- Base Turret Housing -->
+        <rect x="17" y="16.5" width="9" height="11" rx="1" fill="#101c33" stroke="${color}" stroke-width="1.2"/>
+        <!-- Stepped Assault Cannon Barrel -->
+        <rect x="24" y="18.8" width="13" height="6.4" rx="1" fill="${color}" stroke="#ffffff" stroke-width="1"/>
+        <!-- Heavy Muzzle Brake -->
+        <rect x="35" y="17.5" width="3" height="9" rx="0.5" fill="#ffffff"/>
+        <!-- Center Energy Line -->
+        <rect x="20" y="21" width="10" height="2" fill="#ffffff"/>
+
+        <!-- Turret Center Dome & Sensor -->
+        <circle cx="22" cy="22" r="5" fill="#ffffff"/>
+        <circle cx="22" cy="22" r="2.5" fill="${color}"/>
+      `;
       break;
   }
 
   return `
     <svg class="tower-blueprint-svg" viewBox="0 0 44 44" width="${size}" height="${size}">
-      <!-- Cyber Hexagon Pedestal -->
-      <polygon points="37,22 29.5,35 14.5,35 7,22 14.5,9 29.5,9" fill="#0d1527" stroke="${color}" stroke-width="2.2" stroke-linejoin="round"/>
-      <!-- Turret Barrel -->
-      ${barrel}
-      <!-- Turret Center Dome -->
-      <circle cx="22" cy="22" r="5.5" fill="#ffffff"/>
-      <circle cx="22" cy="22" r="2.5" fill="${color}"/>
+      ${content}
     </svg>
   `;
 }
