@@ -362,52 +362,52 @@ export const TOWER_TYPES = {
 // Combat & Tactical Guide (Attributes, Shield breaking, armor shredding)
 export const COMBAT_GUIDE = [
   {
-    category: '🛡️ エネルギーシールドの破壊法',
+    category: 'エネルギーシールドの破壊法',
     color: '#3d84ff',
     desc: '青い光のリングを纏った敵。シールドが存在する間、本体HPは守られる。',
     tips: [
-      '⚡ 【テスラコイル】はシールドに対して2.5倍〜3.5倍の特大電撃ダメージを与え、一撃で破砕できる！',
-      '⚡ 司令官スキル【EMPサージ】を発動すると、画面全体の敵のシールドを即座に半減＋4秒間スタン！',
-      '⚠️ 通常の実弾・物理攻撃はシールドに吸収されやすいため、テスラやEMPでのシールド剥がしが最優先！'
+      '【テスラコイル】はシールドに対して2.5倍〜3.5倍の特大電撃ダメージを与え、一撃で破砕できる！',
+      '司令官スキル【EMPサージ】を発動すると、画面全体の敵のシールドを即座に半減＋4秒間スタン！',
+      '通常の実弾・物理攻撃はシールドに吸収されやすいため、テスラやEMPでのシールド剥がしが最優先！'
     ]
   },
   {
-    category: '🛡️ ヘビー装甲（Armor）の突破法',
+    category: 'ヘビー装甲（Armor）の突破法',
     color: '#ff9900',
     desc: 'オレンジの重装甲タンク。物理ダメージを割合でカット（25%〜40%軽減）する。',
     tips: [
-      '💥 【迫撃砲（キャノン）】の爆発属性ダメージは装甲カットに強く、広範囲にまとめて大ダメージ！',
-      '🔥 【レーザー】は装甲を無視して熱線を照射し続け、秒間ダメージが最大600%まで加速して溶かす！',
-      '⚙️ 【バルカン（シュレッダー進化）】を当てると敵の装甲が剥がれ、周囲タワーの与ダメージが最大+50%増加！'
+      '【迫撃砲（キャノン）】の爆発属性ダメージは装甲カットに強く、広範囲にまとめて大ダメージ！',
+      '【レーザー】は装甲を無視して熱線を照射し続け、秒間ダメージが最大600%まで加速して溶かす！',
+      '【バルカン（シュレッダー進化）】を当てると敵の装甲が剥がれ、周囲タワーの与ダメージが最大+50%増加！'
     ]
   },
   {
-    category: '👻 ステルス（ファントム）の索敵法',
+    category: 'ステルス（ファントム）の索敵法',
     color: '#b84dff',
     desc: '周期的に姿を消す紫のユニット。透明化中はタワーの直接ターゲットから外れる。',
     tips: [
-      '⚡ 【テスラコイル】の連鎖放電は、近くの敵を経由して透明化中の敵にも強制命中する！',
-      '💥 【迫撃砲】の着弾爆風や放射能汚染ゾーンは、姿を消した敵にも巻き込みダメージを与える！'
+      '【テスラコイル】の連鎖放電は、近くの敵を経由して透明化中の敵にも強制命中する！',
+      '【迫撃砲】の着弾爆風や放射能汚染ゾーンは、姿を消した敵にも巻き込みダメージを与える！'
     ]
   },
   {
-    category: '🎯 ターゲット優先設定（Targeting）の活用',
+    category: 'ターゲット優先設定（Targeting）の活用',
     color: '#00ff9d',
     desc: '配置済みタワーをタップすると、標的優先順位（FIRST / LAST / STRONGEST / WEAKEST）を変更可能。',
     tips: [
-      '🎯 【STRONGEST】: 高HPのボスや回復を行うリペアドローンをレールガンやレーザーで集中狙撃！',
-      '🎯 【LAST】: 防衛線の後ろに陣取って周囲を回復し続ける敵を背後から狙い撃つ！',
-      '🎯 【WEAKEST】: 瀕死の敵を優先して仕留め、取りこぼしを確実にゼロにする！'
+      '【STRONGEST】: 高HPのボスや回復を行うリペアドローンをレールガンやレーザーで集中狙撃！',
+      '【LAST】: 防衛線の後ろに陣取って周囲を回復し続ける敵を背後から狙い撃つ！',
+      '【WEAKEST】: 瀕死の敵を優先して仕留め、取りこぼしを確実にゼロにする！'
     ]
   },
   {
-    category: '💥 拠点（ネクサス）への侵入ダメージ差',
+    category: '拠点（ネクサス）への侵入ダメージ差',
     color: '#ff2e63',
     desc: '敵が防衛線を突破して拠点に到達したときのダメージは、敵の脅威度・サイズによって異なります。',
     tips: [
-      '👾 小型・一般兵（スカウト・トルーパー・群れ）: 侵入時に拠点HP -1',
-      '🛡️ 重装甲・特殊兵（ヘビータンク・シールド・スプリッター・ファントム等）: 侵入時に拠点HP -2',
-      '👑 巨大ボス（コロッサス -5 / リーパー -7 / オーバーロード -10）: 拠点が壊滅的打撃を受けるため絶対に通してはならない！'
+      '小型・一般兵（スカウト・トルーパー・群れ）: 侵入時に拠点HP -1',
+      '重装甲・特殊兵（ヘビータンク・シールド・スプリッター・ファントム等）: 侵入時に拠点HP -2',
+      '巨大ボス（コロッサス -5 / リーパー -7 / オーバーロード -10）: 拠点が壊滅的打撃を受けるため絶対に通してはならない！'
     ]
   }
 ];
@@ -586,7 +586,7 @@ export const MAPS = [
     id: 'nexus_prime',
     name: '01. ALPHA CIRCUIT',
     desc: '標準的なS字防衛ライン。基本配置とシナジーを学ぶのに最適。',
-    difficulty: '★☆☆☆☆',
+    difficulty: 'EASY',
     wavesCount: 30,
     baseHp: 20,
     startGold: 450,
@@ -610,7 +610,7 @@ export const MAPS = [
     id: 'dual_cross',
     name: '02. TWIN CROSS',
     desc: '2方向から敵が侵入し、中央の交差点で合流する高難度ルート。',
-    difficulty: '★★☆☆☆',
+    difficulty: 'NORMAL',
     wavesCount: 35,
     baseHp: 20,
     startGold: 400,
@@ -639,7 +639,7 @@ export const MAPS = [
     id: 'silicon_maze',
     name: '03. SILICON MAZE',
     desc: '入り組んだ蛇行迷路。スナイパーやキャノンの配置が勝敗を分ける。',
-    difficulty: '★★★☆☆',
+    difficulty: 'HARD',
     wavesCount: 40,
     baseHp: 25,
     startGold: 450,
@@ -665,7 +665,7 @@ export const MAPS = [
     id: 'vortex_core',
     name: '04. VORTEX CORE',
     desc: '上下左右から中央のクォンタムコアへ敵が侵攻する最終防衛拠点。',
-    difficulty: '★★★★★',
+    difficulty: 'EXPERT',
     wavesCount: 50,
     baseHp: 30,
     startGold: 550,
@@ -705,7 +705,7 @@ export const SKILLS = {
   orbital: {
     id: 'orbital',
     name: '軌道爆撃',
-    icon: '🛰️',
+    icon: 'satellite',
     desc: '指定座標に超高出力の衛星レーザーを投下し、広範囲の敵に大打撃を与える。',
     cooldown: 35,
     damage: 950,
@@ -715,7 +715,7 @@ export const SKILLS = {
   emp: {
     id: 'emp',
     name: 'EMPサージ',
-    icon: '⚡',
+    icon: 'zap',
     desc: '画面内の全敵を4秒間完全に麻痺させ、シールドを半減させる。',
     cooldown: 45,
     duration: 4.0,
@@ -725,7 +725,7 @@ export const SKILLS = {
   overcharge: {
     id: 'overcharge',
     name: 'オーバードライブ',
-    icon: '🚀',
+    icon: 'rocket',
     desc: '10秒間、すべてのタワーの攻撃速度を+100%増加させる。',
     cooldown: 50,
     duration: 10.0,
@@ -735,7 +735,7 @@ export const SKILLS = {
   supply: {
     id: 'supply',
     name: '緊急補給',
-    icon: '💎',
+    icon: 'core',
     desc: '緊急支援クレジットを即座に投下し、資金を獲得する。',
     cooldown: 60,
     goldAmount: 250,
@@ -748,7 +748,7 @@ export const TECH_TREE = [
   {
     id: 'starting_gold',
     name: '初期予算増強',
-    icon: '💰',
+    icon: 'gold',
     desc: 'ステージ開始時の初期所持クレジットを増加。',
     maxLevel: 10,
     costPerLevel: (lvl) => Math.floor(10 * Math.pow(1.4, lvl)),
@@ -758,7 +758,7 @@ export const TECH_TREE = [
   {
     id: 'tower_damage',
     name: '高密度エネルギー弾頭',
-    icon: '⚔️',
+    icon: 'damage',
     desc: 'すべてのタワーの基本攻撃力を永続強化。',
     maxLevel: 10,
     costPerLevel: (lvl) => Math.floor(15 * Math.pow(1.45, lvl)),
@@ -768,7 +768,7 @@ export const TECH_TREE = [
   {
     id: 'fire_rate',
     name: '超伝導サーボモーター',
-    icon: '⚡',
+    icon: 'rate',
     desc: 'すべてのタワーの攻撃速度を向上。',
     maxLevel: 10,
     costPerLevel: (lvl) => Math.floor(15 * Math.pow(1.45, lvl)),
@@ -778,7 +778,7 @@ export const TECH_TREE = [
   {
     id: 'tower_range',
     name: '長距離センサー網',
-    icon: '📡',
+    icon: 'range',
     desc: 'すべてのタワーの射程範囲を拡大。',
     maxLevel: 8,
     costPerLevel: (lvl) => Math.floor(20 * Math.pow(1.5, lvl)),
@@ -788,7 +788,7 @@ export const TECH_TREE = [
   {
     id: 'crit_matrix',
     name: 'クリティカルマトリクス',
-    icon: '🎯',
+    icon: 'target',
     desc: '全タワーにクリティカル発動チャンスを付与。',
     maxLevel: 8,
     costPerLevel: (lvl) => Math.floor(25 * Math.pow(1.55, lvl)),
@@ -798,7 +798,7 @@ export const TECH_TREE = [
   {
     id: 'skill_cooldown',
     name: '指令部冷却システム',
-    icon: '⏱️',
+    icon: 'clock',
     desc: '全司令官スキルのクールダウン時間を短縮。',
     maxLevel: 6,
     costPerLevel: (lvl) => Math.floor(30 * Math.pow(1.6, lvl)),
@@ -808,7 +808,7 @@ export const TECH_TREE = [
   {
     id: 'core_scrapper',
     name: 'スクラップ還元装置',
-    icon: '🔩',
+    icon: 'wrench',
     desc: '敵撃破時に得られるクレジットが上昇。',
     maxLevel: 8,
     costPerLevel: (lvl) => Math.floor(18 * Math.pow(1.5, lvl)),
@@ -818,7 +818,7 @@ export const TECH_TREE = [
   {
     id: 'base_nanites',
     name: 'ナノ修復フィールド',
-    icon: '🛡️',
+    icon: 'shield',
     desc: '拠点HPを増加させ、ウェーブ終了時にHPを自動修復。',
     maxLevel: 6,
     costPerLevel: (lvl) => Math.floor(20 * Math.pow(1.5, lvl)),

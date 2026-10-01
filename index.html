@@ -29,15 +29,21 @@
     <header id="hud-header">
       <div class="hud-group left">
         <div class="hud-item hp-pill" title="拠点コア残耐久">
-          <span class="hud-icon">🛡️</span>
+          <span class="hud-icon">
+            <svg class="icon icon-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </span>
           <span id="hud-hp" class="hud-val">20</span><span class="hud-slash">/</span><span id="hud-hp-max" class="hud-max">20</span>
         </div>
         <div class="hud-item gold-pill" title="所持クレジット">
-          <span class="hud-icon">💰</span>
+          <span class="hud-icon">
+            <svg class="icon icon-gold" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M14.5 9.5a2.5 2.5 0 0 0-2.5-2H10a2.5 2.5 0 0 0 0 5h4a2.5 2.5 0 0 1 0 5h-2.5a2.5 2.5 0 0 1-2.5-2"/><path d="M12 5.5v2m0 9v2"/></svg>
+          </span>
           <span id="hud-gold" class="hud-val">450</span>
         </div>
         <div class="hud-item core-pill" title="クォンタムコア (永続研究用)">
-          <span class="hud-icon">💎</span>
+          <span class="hud-icon">
+            <svg class="icon icon-core" viewBox="0 0 24 24"><polygon points="6 3 18 3 22 9 12 22 2 9"/><polyline points="11 3 8 9 12 22 16 9 13 3"/><line x1="2" y1="9" x2="22" y2="9"/></svg>
+          </span>
           <span id="hud-cores" class="hud-val">20</span>
         </div>
       </div>
@@ -51,10 +57,13 @@
 
       <div class="hud-group right">
         <button id="btn-install-pwa" class="hud-btn pwa-btn hidden" title="PWAアプリをインストール">
-          📱
+          <svg class="icon icon-device" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+          <span class="pwa-text">APP</span>
         </button>
         <button id="btn-open-menu" class="hud-btn menu-btn" title="司令部メニュー (研究所・ステージ・戦術書)">
-          <span class="menu-icon">☰</span>
+          <span class="menu-icon">
+            <svg class="icon icon-menu" viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </span>
         </button>
       </div>
     </header>
@@ -65,10 +74,16 @@
 
       <!-- Floating Controls Overlay (Pause, Speed, Audio, Guide) -->
       <div id="floating-controls" class="floating-controls">
-        <button id="btn-pause" class="float-btn" title="一時停止/再開">⏸</button>
+        <button id="btn-pause" class="float-btn" title="一時停止/再開">
+          <svg class="icon icon-pause" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+        </button>
         <button id="btn-speed" class="float-btn speed" title="ゲーム速度切替">1x</button>
-        <button id="btn-audio" class="float-btn" title="サウンド切替">🔊</button>
-        <button id="btn-open-guide-quick" class="float-btn guide" title="戦術マニュアル (シールドの壊し方・敵図鑑)">📖</button>
+        <button id="btn-audio" class="float-btn" title="サウンド切替">
+          <svg class="icon icon-audio" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+        </button>
+        <button id="btn-open-guide-quick" class="float-btn guide" title="戦術マニュアル (シールドの壊し方・敵図鑑)">
+          <svg class="icon icon-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        </button>
       </div>
     </main>
 
@@ -78,25 +93,31 @@
       <button id="btn-start-wave" class="wave-action-bar">
         <span class="pulse-dot"></span>
         <span id="start-wave-text">NEXT WAVE IN 5s (TAP TO RUSH)</span>
-        <span class="rush-arrow">⚡</span>
+        <span class="rush-arrow">
+          <svg class="icon" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        </span>
       </button>
 
       <!-- Skills Bar -->
       <div id="skills-bar" class="skills-strip">
-        <!-- Dynamically populated skills: Orbital, EMP, Overcharge, Supply -->
+        <!-- Dynamically populated skills -->
       </div>
 
       <!-- Tower Pre-Purchase Tactical Preview Card (Shown when a tower is tapped in shop) -->
       <div id="tower-preview-card" class="tower-preview-card hidden">
         <div class="prev-header">
           <div class="prev-title-box">
-            <span id="prev-icon" class="prev-icon">⬡</span>
+            <span id="prev-icon" class="prev-icon">
+              <svg class="icon" viewBox="0 0 24 24"><polygon points="12 2 4 22 20 22"/><line x1="8" y1="14" x2="16" y2="14"/><line x1="10" y1="8" x2="14" y2="8"/></svg>
+            </span>
             <div>
               <span id="prev-name" class="prev-name">パルス砲</span>
-              <span id="prev-role" class="prev-role-badge">⚡ 万能・先鋒</span>
+              <span id="prev-role" class="prev-role-badge">万能・先鋒</span>
             </div>
           </div>
-          <button id="btn-close-preview" class="prev-close-btn">✕</button>
+          <button id="btn-close-preview" class="prev-close-btn">
+            <svg class="icon icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
         </div>
         <p id="prev-desc" class="prev-desc">標準的な連射エネルギー砲。低コストで信頼性が高い。</p>
         <div class="prev-pros-cons">
@@ -104,14 +125,26 @@
           <div class="cons-item"><strong>苦手:</strong> <span id="prev-weaknesses">重装甲・ボス</span></div>
         </div>
         <div class="prev-stats-row">
-          <div class="stat-pill">⚔️ 威力: <span id="prev-stat-dmg">26</span></div>
-          <div class="stat-pill">⚡ 速度: <span id="prev-stat-rate">1.8/s</span></div>
-          <div class="stat-pill">📡 射程: <span id="prev-stat-range">135</span></div>
+          <div class="stat-pill">
+            <svg class="icon icon-damage" viewBox="0 0 24 24"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/><path d="M16 16l4 4"/><path d="M19 21l2-2"/></svg>
+            <span>威力:</span> <span id="prev-stat-dmg">26</span>
+          </div>
+          <div class="stat-pill">
+            <svg class="icon icon-rate" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <span>速度:</span> <span id="prev-stat-rate">1.8/s</span>
+          </div>
+          <div class="stat-pill">
+            <svg class="icon icon-range" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 3v9l6.36-6.36"/></svg>
+            <span>射程:</span> <span id="prev-stat-range">135</span>
+          </div>
         </div>
         <div class="prev-action-row">
           <button id="btn-confirm-build" class="btn-confirm-build">
             <span>マップ上の枠をタップして配置</span>
-            <strong id="prev-cost-text">💰 100</strong>
+            <strong id="prev-cost-text">
+              <svg class="icon icon-gold" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M14.5 9.5a2.5 2.5 0 0 0-2.5-2H10a2.5 2.5 0 0 0 0 5h4a2.5 2.5 0 0 1 0 5h-2.5a2.5 2.5 0 0 1-2.5-2"/><path d="M12 5.5v2m0 9v2"/></svg>
+              100
+            </strong>
           </button>
         </div>
       </div>
@@ -128,7 +161,9 @@
             <span id="insp-title" class="insp-title">パルス砲 Lv.1</span>
             <button id="btn-target-mode" class="target-btn">標的: FIRST</button>
           </div>
-          <button id="btn-close-inspector" class="insp-close-btn">✕</button>
+          <button id="btn-close-inspector" class="insp-close-btn">
+            <svg class="icon icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
         </div>
 
         <div id="insp-stats" class="insp-stats-row">
@@ -139,7 +174,10 @@
           <!-- Normal Upgrade (Lv 1 -> 2, Lv 2 -> 3) -->
           <button id="btn-upgrade-tower" class="btn-action upgrade-btn">
             <span>レベル強化</span>
-            <strong id="upgrade-cost-text">💰 75</strong>
+            <strong id="upgrade-cost-text">
+              <svg class="icon icon-gold" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M14.5 9.5a2.5 2.5 0 0 0-2.5-2H10a2.5 2.5 0 0 0 0 5h4a2.5 2.5 0 0 1 0 5h-2.5a2.5 2.5 0 0 1-2.5-2"/><path d="M12 5.5v2m0 9v2"/></svg>
+              75
+            </strong>
           </button>
 
           <!-- Branching Evolution (Lv 3 -> Path A / B) -->
@@ -155,7 +193,10 @@
           <!-- Sell Tower -->
           <button id="btn-sell-tower" class="btn-action sell-btn">
             <span>売却</span>
-            <strong id="sell-refund-text">💰 +50</strong>
+            <strong id="sell-refund-text">
+              <svg class="icon icon-gold" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M14.5 9.5a2.5 2.5 0 0 0-2.5-2H10a2.5 2.5 0 0 0 0 5h4a2.5 2.5 0 0 1 0 5h-2.5a2.5 2.5 0 0 1-2.5-2"/><path d="M12 5.5v2m0 9v2"/></svg>
+              +50
+            </strong>
           </button>
         </div>
       </div>
@@ -166,71 +207,112 @@
 
     <!-- Modals Backdrop -->
     <div id="modal-backdrop" class="modal-backdrop hidden">
-      <!-- 0. Headquarters Main Hub / Menu (Accessed from top-right ☰) -->
+      <!-- 0. Headquarters Main Hub / Menu (Accessed from top-right Menu) -->
       <div id="modal-main-menu" class="cyber-modal menu-hub-modal hidden">
         <div class="modal-header">
-          <h2>🛡️ NEXUS 司令部 (HEADQUARTERS)</h2>
-          <button class="btn-close-modal">✕</button>
+          <h2>
+            <svg class="icon icon-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            NEXUS 司令部 (HEADQUARTERS)
+          </h2>
+          <button class="btn-close-modal">
+            <svg class="icon icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
         </div>
         <div class="modal-sub">作戦区域の変更、量子研究、戦術マニュアル（シールド破壊法等）へアクセスできます。</div>
         
         <div class="menu-hub-grid">
           <button id="menu-btn-stages" class="hub-nav-card">
-            <div class="hub-card-icon">🗺️</div>
+            <div class="hub-card-icon">
+              <svg class="icon icon-map" viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+            </div>
             <div class="hub-card-text">
               <strong>作戦区域選択</strong>
               <small>ミッション選択 & 無限エンドレス</small>
             </div>
-            <span class="hub-arrow">➔</span>
+            <span class="hub-arrow">
+              <svg class="icon" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
           </button>
 
           <button id="menu-btn-tech" class="hub-nav-card highlight">
-            <div class="hub-card-icon">🔬</div>
+            <div class="hub-card-icon">
+              <svg class="icon icon-lab" viewBox="0 0 24 24"><path d="M10 2v7.31L4.69 17.5A2 2 0 0 0 6.38 21h11.24a2 2 0 0 0 1.69-3.5L14 9.31V2"/><line x1="8" y1="2" x2="16" y2="2"/><line x1="6" y1="16" x2="18" y2="16"/></svg>
+            </div>
             <div class="hub-card-text">
               <strong>量子研究所 (Tech Lab)</strong>
               <small>クォンタムコアで永続アップグレード</small>
             </div>
-            <span class="hub-arrow">➔</span>
+            <span class="hub-arrow">
+              <svg class="icon" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
           </button>
 
           <button id="menu-btn-guide" class="hub-nav-card info">
-            <div class="hub-card-icon">📖</div>
+            <div class="hub-card-icon">
+              <svg class="icon icon-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            </div>
             <div class="hub-card-text">
               <strong>戦術マニュアル & 敵図鑑</strong>
               <small>シールドの壊し方・装甲対策・タワー詳細</small>
             </div>
-            <span class="hub-arrow">➔</span>
+            <span class="hub-arrow">
+              <svg class="icon" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
           </button>
 
           <button id="menu-btn-achieve" class="hub-nav-card">
-            <div class="hub-card-icon">🏆</div>
+            <div class="hub-card-icon">
+              <svg class="icon icon-trophy" viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.45 1-1 1H8c-.55 0-1 .45-1 1v1c0 .55.45 1 1 1h8c.55 0 1-.45 1-1v-1c0-.55-.45-1-1-1h-1c-.55 0-1-.45-1-1v-2.34"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>
+            </div>
             <div class="hub-card-text">
               <strong>実績・アチーブメント</strong>
               <small>達成報酬でコア獲得</small>
             </div>
-            <span class="hub-arrow">➔</span>
+            <span class="hub-arrow">
+              <svg class="icon" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
           </button>
         </div>
 
         <div class="menu-hub-footer">
-          <button id="menu-btn-resume" class="btn-resume-mission">作戦を再開 ▶</button>
-          <button id="menu-btn-restart" class="btn-restart-mission">このミッションをリスタート 🔄</button>
+          <button id="menu-btn-resume" class="btn-resume-mission">
+            <svg class="icon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            作戦を再開
+          </button>
+          <button id="menu-btn-restart" class="btn-restart-mission">
+            <svg class="icon icon-restart" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            このミッションをリスタート
+          </button>
         </div>
       </div>
 
       <!-- 1. Tactical Guide & Enemy Compendium (シールドの壊し方・タワー特徴・敵図鑑) -->
       <div id="modal-guide" class="cyber-modal guide-modal hidden">
         <div class="modal-header">
-          <h2>📖 戦術マニュアル & 攻略アーカイブ</h2>
-          <button class="btn-close-modal">✕</button>
+          <h2>
+            <svg class="icon icon-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            戦術マニュアル & 攻略アーカイブ
+          </h2>
+          <button class="btn-close-modal">
+            <svg class="icon icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
         </div>
         <div class="modal-sub">シールド・重装甲への対抗策や各タワーの得意分野、敵の弱点を網羅した作戦教本。</div>
 
         <!-- Guide Tabs -->
         <div class="guide-tabs">
-          <button class="guide-tab-btn active" data-tab="tab-combat">⚔️ 戦闘システム・シールド破壊</button>
-          <button class="guide-tab-btn" data-tab="tab-towers">🗼 タワー特徴・進化先</button>
-          <button class="guide-tab-btn" data-tab="tab-enemies">👾 敵ユニット・ボス図鑑</button>
+          <button class="guide-tab-btn active" data-tab="tab-combat">
+            <svg class="icon icon-damage" viewBox="0 0 24 24"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/><path d="M16 16l4 4"/><path d="M19 21l2-2"/></svg>
+            戦闘システム・シールド破壊
+          </button>
+          <button class="guide-tab-btn" data-tab="tab-towers">
+            <svg class="icon icon-tower" viewBox="0 0 24 24"><polygon points="12 2 4 22 20 22"/><line x1="8" y1="14" x2="16" y2="14"/><line x1="10" y1="8" x2="14" y2="8"/></svg>
+            タワー特徴・進化先
+          </button>
+          <button class="guide-tab-btn" data-tab="tab-enemies">
+            <svg class="icon icon-enemy" viewBox="0 0 24 24"><circle cx="12" cy="11" r="8"/><circle cx="9" cy="10" r="1.5" fill="currentColor"/><circle cx="15" cy="10" r="1.5" fill="currentColor"/><path d="M9 17v2m3-2v2m3-2v2"/><path d="M8 17h8"/></svg>
+            敵ユニット・ボス図鑑
+          </button>
         </div>
 
         <!-- Tab 1: Combat & Shield Breaking -->
@@ -258,12 +340,21 @@
       <!-- 2. Laboratory / Tech Tree Modal -->
       <div id="modal-tech" class="cyber-modal hidden">
         <div class="modal-header">
-          <h2>🔬 量子研究所 (TECHNOLOGY LAB)</h2>
-          <button class="btn-close-modal">✕</button>
+          <h2>
+            <svg class="icon icon-lab" viewBox="0 0 24 24"><path d="M10 2v7.31L4.69 17.5A2 2 0 0 0 6.38 21h11.24a2 2 0 0 0 1.69-3.5L14 9.31V2"/><line x1="8" y1="2" x2="16" y2="2"/><line x1="6" y1="16" x2="18" y2="16"/></svg>
+            量子研究所 (TECHNOLOGY LAB)
+          </h2>
+          <button class="btn-close-modal">
+            <svg class="icon icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
         </div>
         <div class="modal-sub">
           クォンタムコアを消費して全タワー・司令官・拠点を永続強化します。
-          <span class="cores-badge">所持コア: 💎 <span id="tech-cores-display">20</span></span>
+          <span class="cores-badge">
+            所持コア:
+            <svg class="icon icon-core" viewBox="0 0 24 24"><polygon points="6 3 18 3 22 9 12 22 2 9"/><polyline points="11 3 8 9 12 22 16 9 13 3"/><line x1="2" y1="9" x2="22" y2="9"/></svg>
+            <span id="tech-cores-display">20</span>
+          </span>
         </div>
         <div id="tech-list" class="tech-grid">
           <!-- Tech items injected by JS -->
@@ -273,8 +364,13 @@
       <!-- 3. Stage Selection Modal -->
       <div id="modal-stage" class="cyber-modal hidden">
         <div class="modal-header">
-          <h2>🗺️ 作戦区域選択 (MISSIONS)</h2>
-          <button class="btn-close-modal">✕</button>
+          <h2>
+            <svg class="icon icon-map" viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+            作戦区域選択 (MISSIONS)
+          </h2>
+          <button class="btn-close-modal">
+            <svg class="icon icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
         </div>
         <div class="modal-sub">防衛任務を選択してください。キャンペーンと無限耐久のエンドレスモードをプレイ可能。</div>
         <div id="stage-list" class="stages-grid">
@@ -285,8 +381,13 @@
       <!-- 4. Achievements Modal -->
       <div id="modal-achieve" class="cyber-modal hidden">
         <div class="modal-header">
-          <h2>🏆 実績・アチーブメント (AWARDS)</h2>
-          <button class="btn-close-modal">✕</button>
+          <h2>
+            <svg class="icon icon-trophy" viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.45 1-1 1H8c-.55 0-1 .45-1 1v1c0 .55.45 1 1 1h8c.55 0 1-.45 1-1v-1c0-.55-.45-1-1-1h-1c-.55 0-1-.45-1-1v-2.34"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>
+            実績・アチーブメント (AWARDS)
+          </h2>
+          <button class="btn-close-modal">
+            <svg class="icon icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
         </div>
         <div class="modal-sub">過酷な防衛ミッションを達成して大量のクォンタムコアを獲得せよ。</div>
         <div id="achieve-list" class="achieve-grid">
@@ -300,10 +401,22 @@
         <p id="result-desc" class="result-desc">拠点の防衛に成功しました。</p>
         <div id="result-stats" class="result-stats-box"></div>
         <div class="result-actions">
-          <button id="btn-result-retry" class="btn-result highlight">再挑戦 🔄</button>
-          <button id="btn-result-guide" class="btn-result">戦術マニュアルで弱点を確認 📖</button>
-          <button id="btn-result-tech" class="btn-result">研究所で永続強化 🔬</button>
-          <button id="btn-result-select" class="btn-result">作戦区域選択 🗺️</button>
+          <button id="btn-result-retry" class="btn-result highlight">
+            <svg class="icon icon-restart" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            再挑戦
+          </button>
+          <button id="btn-result-guide" class="btn-result">
+            <svg class="icon icon-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            戦術マニュアルで弱点を確認
+          </button>
+          <button id="btn-result-tech" class="btn-result">
+            <svg class="icon icon-lab" viewBox="0 0 24 24"><path d="M10 2v7.31L4.69 17.5A2 2 0 0 0 6.38 21h11.24a2 2 0 0 0 1.69-3.5L14 9.31V2"/><line x1="8" y1="2" x2="16" y2="2"/><line x1="6" y1="16" x2="18" y2="16"/></svg>
+            研究所で永続強化
+          </button>
+          <button id="btn-result-select" class="btn-result">
+            <svg class="icon icon-map" viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+            作戦区域選択
+          </button>
         </div>
       </div>
     </div>

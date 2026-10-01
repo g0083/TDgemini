@@ -524,7 +524,7 @@ export class Tower {
       ctx.font = 'bold 9px monospace';
       ctx.fillStyle = this.level === 4 ? '#ffd000' : '#00ff9d';
       ctx.textAlign = 'center';
-      const label = this.level === 4 ? (this.evolvedPath === 'pathA' ? '✦A' : '✦B') : `Lv${this.level}`;
+      const label = this.level === 4 ? (this.evolvedPath === 'pathA' ? 'EX-A' : 'EX-B') : `Lv${this.level}`;
       ctx.fillText(label, 0, -22);
       ctx.restore();
     }

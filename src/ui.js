@@ -2,6 +2,7 @@
 // USER INTERFACE & MOBILE CONTROLLER
 // ==========================================
 import { TOWER_TYPES, MAPS, TECH_TREE, ACHIEVEMENTS, SKILLS, COMBAT_GUIDE, ENEMY_TYPES } from './constants.js';
+import { ICONS } from './icons.js';
 import { state } from './state.js';
 import { audio } from './audio.js';
 
@@ -110,7 +111,7 @@ export class UIManager {
       if (this.dom.installBtn) {
         this.dom.installBtn.classList.add('hidden');
       }
-      this.showToast('📱 インストール完了！ホーム画面からいつでもプレイできます');
+      this.showToast('インストール完了！ホーム画面からいつでもプレイできます');
     });
   }
 
@@ -134,7 +135,7 @@ export class UIManager {
     });
 
     state.onAchievement((ach) => {
-      this.showToast(`${ach.title}: ${ach.desc} (+${ach.reward} 💎)`, '🏆 実績解除！');
+      this.showToast(`${ach.title}: ${ach.desc} (+${ach.reward} CORES)`, 'ACHIEVEMENT UNLOCKED');
     });
   }
 
@@ -153,7 +154,7 @@ export class UIManager {
         </div>
         <div class="tower-name">${tower.name}</div>
         <div class="tower-role-mini">${tower.role.split('・')[0]}</div>
-        <div class="tower-cost">💰 ${tower.cost}</div>
+        <div class="tower-cost">${ICONS.gold} ${tower.cost}</div>
       `;
       card.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -166,16 +167,16 @@ export class UIManager {
 
   getTowerSymbol(typeId) {
     const symbols = {
-      pulse: '⬡',
-      gatling: '⚙',
-      sniper: '✦',
-      cryo: '❄',
-      cannon: '▲',
-      tesla: '⚡',
-      laser: '═',
-      booster: '◈'
+      pulse: ICONS.pulse,
+      gatling: ICONS.gear,
+      sniper: ICONS.target,
+      cryo: ICONS.snow,
+      cannon: ICONS.bomb,
+      tesla: ICONS.zap,
+      laser: ICONS.flame,
+      booster: ICONS.booster
     };
-    return symbols[typeId] || '⬡';
+    return symbols[typeId] || ICONS.pulse;
   }
 
   selectTowerForPurchase(typeId) {
@@ -195,13 +196,13 @@ export class UIManager {
     if (!def) return;
 
     if (this.dom.prevIcon) {
-      this.dom.prevIcon.innerText = this.getTowerSymbol(def.id);
+      this.dom.prevIcon.innerHTML = this.getTowerSymbol(def.id);
       this.dom.prevIcon.style.color = def.color;
       this.dom.prevIcon.style.textShadow = `0 0 12px ${def.color}`;
     }
     if (this.dom.prevName) this.dom.prevName.innerText = def.name;
     if (this.dom.prevRole) {
-      this.dom.prevRole.innerText = `🏷️ ${def.role}`;
+      this.dom.prevRole.innerText = def.role;
       this.dom.prevRole.style.borderColor = def.color;
       this.dom.prevRole.style.color = def.color;
     }
@@ -212,7 +213,7 @@ export class UIManager {
     if (this.dom.prevStatDmg) this.dom.prevStatDmg.innerText = def.damage || '-';
     if (this.dom.prevStatRate) this.dom.prevStatRate.innerText = def.fireRate ? `${def.fireRate}/s` : '-';
     if (this.dom.prevStatRange) this.dom.prevStatRange.innerText = def.range || '-';
-    if (this.dom.prevCostText) this.dom.prevCostText.innerText = `💰 ${def.cost}`;
+    if (this.dom.prevCostText) this.dom.prevCostText.innerHTML = `${ICONS.gold} ${def.cost}`;
 
     this.dom.towerPreviewCard?.classList.remove('hidden');
     this.dom.towerInspector?.classList.add('hidden');
@@ -234,7 +235,7 @@ export class UIManager {
       btn.className = 'skill-btn';
       btn.id = `skill-${skill.id}`;
       btn.innerHTML = `
-        <span class="skill-icon">${skill.icon}</span>
+        <span class="skill-icon">${ICONS[skill.icon] || ICONS.zap}</span>
         <span class="skill-name">${skill.name}</span>
         <div class="skill-overlay" id="skill-overlay-${skill.id}"></div>
         <span class="skill-cd-text" id="skill-cd-${skill.id}"></span>
@@ -262,13 +263,13 @@ export class UIManager {
     this.dom.pauseBtn?.addEventListener('click', () => {
       audio.ensureContext();
       this.game.isPaused = !this.game.isPaused;
-      this.dom.pauseBtn.innerText = this.game.isPaused ? '▶' : '⏸';
+      this.dom.pauseBtn.innerHTML = this.game.isPaused ? ICONS.play : ICONS.pause;
     });
 
     this.dom.audioBtn?.addEventListener('click', () => {
       audio.ensureContext();
       const isPlaying = audio.toggleBgm();
-      this.dom.audioBtn.innerText = isPlaying ? '🔊' : '🔇';
+      this.dom.audioBtn.innerHTML = isPlaying ? ICONS.audio : ICONS.audioMute;
     });
 
     this.dom.guideQuickBtn?.addEventListener('click', () => {
@@ -483,10 +484,10 @@ export class UIManager {
       const rng = Math.round(tower.effectiveRange);
       const role = tower.def.role;
       this.dom.inspectorStats.innerHTML = `
-        <div class="stat-pill role">🏷️ ${role}</div>
-        <div class="stat-pill">⚔️ 威力: <span>${dmg}</span></div>
-        <div class="stat-pill">⚡ 速度: <span>${rate}/s</span></div>
-        <div class="stat-pill">📡 射程: <span>${rng}</span></div>
+        <div class="stat-pill role">${role}</div>
+        <div class="stat-pill">${ICONS.damage} 威力: <span>${dmg}</span></div>
+        <div class="stat-pill">${ICONS.rate} 速度: <span>${rate}/s</span></div>
+        <div class="stat-pill">${ICONS.range} 射程: <span>${rng}</span></div>
       `;
     }
 
@@ -499,7 +500,7 @@ export class UIManager {
     if (tower.level < 3 && upgradeCost) {
       this.dom.upgradeBtn?.classList.remove('hidden');
       this.dom.evolveSection?.classList.add('hidden');
-      if (this.dom.upgradeCost) this.dom.upgradeCost.innerText = `💰 ${upgradeCost}`;
+      if (this.dom.upgradeCost) this.dom.upgradeCost.innerHTML = `${ICONS.gold} ${upgradeCost}`;
       if (this.game.gold < upgradeCost) {
         this.dom.upgradeBtn?.classList.add('disabled');
       } else {
@@ -517,7 +518,7 @@ export class UIManager {
         this.dom.evolveBtnA.innerHTML = `
           <strong>${pathA.name}</strong>
           <small>${pathA.desc}</small>
-          <span class="cost">💰 ${pathA.cost}</span>
+          <span class="cost">${ICONS.gold} ${pathA.cost}</span>
         `;
         if (this.game.gold < pathA.cost) this.dom.evolveBtnA.classList.add('disabled');
         else this.dom.evolveBtnA.classList.remove('disabled');
@@ -527,7 +528,7 @@ export class UIManager {
         this.dom.evolveBtnB.innerHTML = `
           <strong>${pathB.name}</strong>
           <small>${pathB.desc}</small>
-          <span class="cost">💰 ${pathB.cost}</span>
+          <span class="cost">${ICONS.gold} ${pathB.cost}</span>
         `;
         if (this.game.gold < pathB.cost) this.dom.evolveBtnB.classList.add('disabled');
         else this.dom.evolveBtnB.classList.remove('disabled');
@@ -541,7 +542,7 @@ export class UIManager {
     // Sell Refund
     const refund = Math.floor(tower.totalInvested * 0.7);
     if (this.dom.sellRefund) {
-      this.dom.sellRefund.innerText = `💰 +${refund}`;
+      this.dom.sellRefund.innerHTML = `${ICONS.gold} +${refund}`;
     }
   }
 
@@ -611,22 +612,22 @@ export class UIManager {
               <strong style="color: ${tower.color}; font-size: 15px;">${tower.name}</strong>
               <span class="guide-role-tag">${tower.role}</span>
             </div>
-            <span class="guide-tower-cost">💰 ${tower.cost}</span>
+            <span class="guide-tower-cost">${ICONS.gold} ${tower.cost}</span>
           </div>
           <div class="guide-tower-desc">${tower.desc}</div>
           <div class="guide-tower-matchups">
-            <div class="match-item pro"><strong>◎ 得意:</strong> ${tower.strengths}</div>
-            <div class="match-item con"><strong>▲ 苦手:</strong> ${tower.weaknesses}</div>
+            <div class="match-item pro"><strong>得意:</strong> ${tower.strengths}</div>
+            <div class="match-item con"><strong>苦手:</strong> ${tower.weaknesses}</div>
           </div>
           <div class="guide-evolve-box">
-            <div class="evolve-header">特化分岐 (Lv.3 ➔ Lv.4)</div>
+            <div class="evolve-header">特化分岐 (Lv.3 → Lv.4)</div>
             <div class="evolve-dual">
               <div class="evolve-mini">
-                <strong>✦ Path A: ${tower.paths.pathA.name}</strong>
+                <strong>Path A: ${tower.paths.pathA.name}</strong>
                 <p>${tower.paths.pathA.desc}</p>
               </div>
               <div class="evolve-mini">
-                <strong>✦ Path B: ${tower.paths.pathB.name}</strong>
+                <strong>Path B: ${tower.paths.pathB.name}</strong>
                 <p>${tower.paths.pathB.desc}</p>
               </div>
             </div>
@@ -646,31 +647,31 @@ export class UIManager {
         card.className = `guide-enemy-card ${enemy.isBoss ? 'boss-card' : ''}`;
         card.innerHTML = `
           <div class="guide-enemy-header">
-            <div class="guide-enemy-shape" style="color: ${enemy.color};">${enemy.isBoss ? '👑' : '👾'}</div>
+            <div class="guide-enemy-shape" style="color: ${enemy.color};">${enemy.isBoss ? ICONS.crown : ICONS.enemy}</div>
             <div class="guide-enemy-name-box">
               <strong style="color: ${enemy.color}; font-size: 14px;">${enemy.name}</strong>
               <div class="guide-enemy-badges">
-                ${enemy.shield ? `<span class="badge shield">🛡️ シールド: ${enemy.shield}</span>` : ''}
-                ${enemy.armor ? `<span class="badge armor">🛡️ 装甲カット: ${Math.round(enemy.armor * 100)}%</span>` : ''}
-                ${enemy.isStealth ? `<span class="badge stealth">👻 ステルス迷彩</span>` : ''}
-                ${enemy.splitsInto ? `<span class="badge split">💥 分裂能力</span>` : ''}
-                ${enemy.healRate ? `<span class="badge heal">🚑 周囲回復</span>` : ''}
+                ${enemy.shield ? `<span class="badge shield">SHIELD: ${enemy.shield}</span>` : ''}
+                ${enemy.armor ? `<span class="badge armor">ARMOR: -${Math.round(enemy.armor * 100)}%</span>` : ''}
+                ${enemy.isStealth ? `<span class="badge stealth">STEALTH</span>` : ''}
+                ${enemy.splitsInto ? `<span class="badge split">SPLIT</span>` : ''}
+                ${enemy.healRate ? `<span class="badge heal">REPAIR</span>` : ''}
               </div>
             </div>
             <div class="guide-enemy-stats">
               <div>HP: <strong>${enemy.hp}</strong></div>
               <div>速度: <strong>${enemy.speed}</strong></div>
-              <div>拠点被害: <strong style="color: #ff2e63;">💥 -${enemy.nexusDamage || 1} HP</strong></div>
+              <div>拠点被害: <strong style="color: #ff2e63;">-${enemy.nexusDamage || 1} HP</strong></div>
             </div>
           </div>
           <div class="guide-enemy-counter">
             <strong>対策方針:</strong>
-            ${enemy.shield ? '⚡ テスラコイルやEMPサージでシールドを一瞬で破砕せよ。' : ''}
-            ${enemy.armor ? '💥 迫撃砲の爆発やレーザー熱線で装甲を突破せよ。' : ''}
-            ${enemy.isStealth ? '⚡ テスラの連鎖電撃や迫撃砲の爆風で炙り出せ。' : ''}
-            ${enemy.splitsInto ? '⚙️ 分裂直後にバルカンの連射や迫撃砲で一掃せよ。' : ''}
-            ${enemy.healRate ? '🎯 スナイパーの標的を【LAST】にして背後から最優先狙撃！' : ''}
-            ${!enemy.shield && !enemy.armor && !enemy.isStealth && !enemy.splitsInto && !enemy.healRate ? '⬡ パルス砲やバルカンの集中砲火で早期撃破。' : ''}
+            ${enemy.shield ? 'テスラコイルやEMPサージでシールドを一瞬で破砕せよ。' : ''}
+            ${enemy.armor ? '迫撃砲の爆発やレーザー熱線で装甲を突破せよ。' : ''}
+            ${enemy.isStealth ? 'テスラの連鎖電撃や迫撃砲の爆風で炙り出せ。' : ''}
+            ${enemy.splitsInto ? '分裂直後にバルカンの連射や迫撃砲で一掃せよ。' : ''}
+            ${enemy.healRate ? 'スナイパーの標的を【LAST】にして背後から最優先狙撃！' : ''}
+            ${!enemy.shield && !enemy.armor && !enemy.isStealth && !enemy.splitsInto && !enemy.healRate ? 'パルス砲やバルカンの集中砲火で早期撃破。' : ''}
           </div>
         `;
         enemiesContainer.appendChild(card);
@@ -702,7 +703,7 @@ export class UIManager {
       const item = document.createElement('div');
       item.className = 'tech-item';
       item.innerHTML = `
-        <div class="tech-icon">${tech.icon}</div>
+        <div class="tech-icon">${ICONS[tech.icon] || ICONS.wrench}</div>
         <div class="tech-info">
           <div class="tech-title">${tech.name} <span class="tech-level">Lv.${lvl}/${tech.maxLevel}</span></div>
           <div class="tech-desc">${tech.desc}</div>
@@ -711,7 +712,7 @@ export class UIManager {
         <div class="tech-action">
           ${isMax ? '<span class="max-badge">MAX</span>' : `
             <button class="btn-tech-buy ${canAfford ? '' : 'disabled'}" data-tech="${tech.id}">
-              💎 ${cost}
+              ${ICONS.core} ${cost}
             </button>
           `}
         </div>
@@ -745,13 +746,13 @@ export class UIManager {
       const item = document.createElement('div');
       item.className = `achieve-item ${isUnlocked ? 'unlocked' : 'locked'}`;
       item.innerHTML = `
-        <div class="achieve-status">${isUnlocked ? '✓' : '🔒'}</div>
+        <div class="achieve-status">${isUnlocked ? ICONS.check : ICONS.lock}</div>
         <div class="achieve-details">
           <div class="achieve-title">${ach.title}</div>
           <div class="achieve-desc">${ach.desc}</div>
         </div>
         <div class="achieve-reward">
-          💎 +${ach.reward}
+          ${ICONS.core} +${ach.reward}
         </div>
       `;
       this.dom.achieveList.appendChild(item);
@@ -782,7 +783,7 @@ export class UIManager {
         <div class="stage-desc">${map.desc}</div>
         <div class="stage-footer">
           <span class="stage-waves">WAVES: ${map.wavesCount}</span>
-          <span class="stage-reward">初クリア: 💎 ${map.coreReward}</span>
+          <span class="stage-reward">初クリア: ${ICONS.core} ${map.coreReward}</span>
           <div class="stage-btns">
             <button class="btn-play-stage" data-map="${map.id}">CAMPAIGN</button>
             <button class="btn-play-endless" data-map="${map.id}">ENDLESS</button>
@@ -817,7 +818,7 @@ export class UIManager {
     if (this.dom.resultStats) {
       this.dom.resultStats.innerHTML = `
         <div class="res-stat">到達ウェーブ: <strong>${wave}</strong></div>
-        <div class="res-stat">所持コア: <strong>💎 ${state.data.quantumCores}</strong></div>
+        <div class="res-stat">所持コア: <strong>${ICONS.core} ${state.data.quantumCores}</strong></div>
       `;
     }
   }
@@ -835,8 +836,8 @@ export class UIManager {
     if (this.dom.resultStats) {
       this.dom.resultStats.innerHTML = `
         <div class="res-stat">クリアウェーブ: <strong>${wave}</strong></div>
-        <div class="res-stat">獲得コア: <strong>💎 +${coreReward}</strong></div>
-        <div class="res-stat">拠点完全防衛: <strong>${isFlawless ? '🏆 達成' : '通常'}</strong></div>
+        <div class="res-stat">獲得コア: <strong>${ICONS.core} +${coreReward}</strong></div>
+        <div class="res-stat">拠点完全防衛: <strong>${isFlawless ? 'PERFECT (FLAWLESS)' : 'CLEARED'}</strong></div>
       `;
     }
   }

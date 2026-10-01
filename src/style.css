@@ -98,8 +98,114 @@ html, body {
   white-space: nowrap;
 }
 
+/* ===================================================
+   SVG ICON SYSTEM - Scalable Cyberpunk Vectors
+   =================================================== */
+.icon {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.15em;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+}
+
 .hud-icon {
-  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+}
+
+.hud-icon .icon {
+  width: 13px;
+  height: 13px;
+}
+
+.pwa-text {
+  font-size: 10px;
+  margin-left: 3px;
+  font-weight: 700;
+}
+
+.menu-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.menu-icon .icon {
+  width: 18px;
+  height: 18px;
+}
+
+.float-btn .icon {
+  width: 16px;
+  height: 16px;
+}
+
+.btn-close-modal .icon,
+.prev-close-btn .icon,
+.insp-close-btn .icon {
+  width: 14px;
+  height: 14px;
+}
+
+.hub-card-icon .icon {
+  width: 24px;
+  height: 24px;
+}
+
+.hub-arrow .icon {
+  width: 14px;
+  height: 14px;
+}
+
+.stat-pill .icon {
+  width: 12px;
+  height: 12px;
+  margin-right: 3px;
+}
+
+.guide-tab-btn .icon {
+  width: 14px;
+  height: 14px;
+  margin-right: 4px;
+}
+
+.guide-tower-icon .icon {
+  width: 20px;
+  height: 20px;
+}
+
+.guide-enemy-shape .icon {
+  width: 20px;
+  height: 20px;
+}
+
+.skill-icon .icon {
+  width: 22px;
+  height: 22px;
+}
+
+.tech-icon .icon {
+  width: 24px;
+  height: 24px;
+}
+
+.achieve-icon .icon {
+  width: 22px;
+  height: 22px;
+}
+
+.achieve-status .icon {
+  width: 18px;
+  height: 18px;
 }
 
 .hp-pill {

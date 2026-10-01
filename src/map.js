@@ -387,7 +387,7 @@ export class GameMap {
     ctx.fillStyle = hpRatio <= 0.25 ? '#ff2e63' : (hpRatio <= 0.5 ? '#ffea00' : '#00f0ff');
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
-    ctx.fillText(`🛡️ HP ${baseHp}/${maxBaseHp}`, barX + barWidth / 2, badgeY + 2);
+    ctx.fillText(`NEXUS: ${baseHp}/${maxBaseHp}`, barX + barWidth / 2, badgeY + 2);
 
     // HP Horizontal Fill Bar
     ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
