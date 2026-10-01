@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite --host --no-clearScreen",
+    "dev": "node serve.js",
+    "serve": "node serve.js",
     "build": "vite build",
     "preview": "vite preview --host"
   },
