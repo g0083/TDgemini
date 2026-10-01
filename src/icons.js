@@ -54,3 +54,126 @@ export const ICONS = {
   rocket: `<svg class="icon" viewBox="0 0 24 24"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>`,
   stealth: `<svg class="icon" viewBox="0 0 24 24"><path d="M9 10h.01M15 10h.01M12 2a8 8 0 0 0-8 8v12l3-3 2.5 2.5L12 19l2.5 2.5L17 19l3 3V10a8 8 0 0 0-8-8z"/></svg>`
 };
+
+// Map-accurate Vector SVG generator for towers (Hex pedestal + articulated turret barrel + center dome)
+export function getTowerVisualSvg(typeId, color = '#00f0ff', size = 36) {
+  let barrel = '';
+  switch (typeId) {
+    case 'pulse':
+      barrel = `<rect x="20" y="19" width="16" height="6" rx="1.5" fill="${color}" stroke="#ffffff" stroke-width="1"/>`;
+      break;
+    case 'gatling':
+      barrel = `
+        <rect x="20" y="17" width="15" height="3.5" rx="1" fill="${color}" stroke="#ffffff" stroke-width="0.8"/>
+        <rect x="20" y="23.5" width="15" height="3.5" rx="1" fill="${color}" stroke="#ffffff" stroke-width="0.8"/>
+      `;
+      break;
+    case 'sniper':
+      barrel = `
+        <rect x="20" y="19.5" width="22" height="5" rx="1" fill="${color}" stroke="#ffffff" stroke-width="1"/>
+        <line x1="28" y1="18.5" x2="28" y2="25.5" stroke="#ffffff" stroke-width="1.2"/>
+      `;
+      break;
+    case 'cannon':
+      barrel = `
+        <rect x="20" y="17.5" width="14" height="9" rx="1.5" fill="${color}" stroke="#ffffff" stroke-width="1"/>
+        <line x1="24" y1="17.5" x2="24" y2="26.5" stroke="#0d1527" stroke-width="1.5"/>
+      `;
+      break;
+    case 'booster':
+      barrel = `<rect x="16" y="16" width="12" height="12" rx="1.5" fill="${color}" stroke="#ffffff" stroke-width="1.2" transform="rotate(45 22 22)"/>`;
+      break;
+    case 'cryo':
+      barrel = `
+        <rect x="20" y="19" width="14" height="6" rx="2" fill="${color}" stroke="#ffffff" stroke-width="1"/>
+        <circle cx="36" cy="22" r="3" fill="none" stroke="#60d5ff" stroke-width="1.5"/>
+      `;
+      break;
+    case 'tesla':
+      barrel = `
+        <line x1="20" y1="22" x2="34" y2="22" stroke="${color}" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="28" cy="22" r="4.5" fill="none" stroke="#ffffff" stroke-width="1.2"/>
+        <circle cx="35" cy="22" r="3" fill="${color}" stroke="#ffffff" stroke-width="1"/>
+      `;
+      break;
+    case 'laser':
+      barrel = `
+        <polygon points="20,18 35,20.5 35,23.5 20,26" fill="${color}" stroke="#ffffff" stroke-width="1"/>
+        <circle cx="36" cy="22" r="2.5" fill="#ffffff"/>
+      `;
+      break;
+    default:
+      barrel = `<rect x="20" y="19" width="16" height="6" rx="1.5" fill="${color}" stroke="#ffffff" stroke-width="1"/>`;
+      break;
+  }
+
+  return `
+    <svg class="tower-blueprint-svg" viewBox="0 0 44 44" width="${size}" height="${size}">
+      <!-- Cyber Hexagon Pedestal -->
+      <polygon points="37,22 29.5,35 14.5,35 7,22 14.5,9 29.5,9" fill="#0d1527" stroke="${color}" stroke-width="2.2" stroke-linejoin="round"/>
+      <!-- Turret Barrel -->
+      ${barrel}
+      <!-- Turret Center Dome -->
+      <circle cx="22" cy="22" r="5.5" fill="#ffffff"/>
+      <circle cx="22" cy="22" r="2.5" fill="${color}"/>
+    </svg>
+  `;
+}
+
+// Map-accurate Vector SVG generator for enemies (Exact polygon geometries, shield rings, cores)
+export function getEnemyVisualSvg(enemy, size = 36) {
+  const shape = enemy.shape || 'triangle';
+  const color = enemy.color || '#00f0ff';
+  let geo = '';
+
+  switch (shape) {
+    case 'triangle':
+      // Arrowhead pointing forward
+      geo = `<polygon points="31,22 13,14 17,22 13,30" fill="${color}" stroke="#ffffff" stroke-width="1.5" stroke-linejoin="round"/>`;
+      break;
+    case 'square':
+      // Standard Drone Box
+      geo = `<rect x="14" y="14" width="16" height="16" rx="1" fill="${color}" stroke="#ffffff" stroke-width="1.5"/>`;
+      break;
+    case 'hexagon':
+      // Heavy Tank Hexagon
+      geo = `<polygon points="33,22 27.5,31.5 16.5,31.5 11,22 16.5,12.5 27.5,12.5" fill="${color}" stroke="#ffffff" stroke-width="1.6" stroke-linejoin="round"/>`;
+      break;
+    case 'diamond':
+      // Swarmer / Speedy Diamond
+      geo = `<polygon points="22,12 32,22 22,32 12,22" fill="${color}" stroke="#ffffff" stroke-width="1.5" stroke-linejoin="round"/>`;
+      break;
+    case 'cross':
+      // Repair Drone Cross
+      geo = `<polygon points="19,11 25,11 25,19 33,19 33,25 25,25 25,33 19,33 19,25 11,25 11,19 19,19" fill="${color}" stroke="#ffffff" stroke-width="1.4" stroke-linejoin="round"/>`;
+      break;
+    case 'chevron':
+      // Phantom Stealth Chevron
+      geo = `<polygon points="29,22 15,13 19,22 15,31" fill="${color}" stroke="#ffffff" stroke-width="1.5" stroke-linejoin="round" opacity="0.85"/>`;
+      break;
+    case 'boss_octagon':
+    case 'boss_star':
+    case 'boss_omega':
+      // Boss 8-Pointed Star Fortress with Glowing Core
+      geo = `
+        <polygon points="35,22 28,28 22,35 16,28 9,22 16,16 22,9 28,16" fill="${color}" stroke="#ffffff" stroke-width="1.8" stroke-linejoin="round"/>
+        <circle cx="22" cy="22" r="5" fill="#ffffff"/>
+      `;
+      break;
+    default:
+      geo = `<circle cx="22" cy="22" r="9" fill="${color}" stroke="#ffffff" stroke-width="1.5"/>`;
+      break;
+  }
+
+  // Energy Shield Outer Ring if unit possesses shield
+  const shieldRing = (enemy.shield && enemy.shield > 0)
+    ? `<circle cx="22" cy="22" r="19" fill="rgba(61, 132, 255, 0.12)" stroke="#3d84ff" stroke-width="2" stroke-dasharray="4,2.5"/>`
+    : '';
+
+  return `
+    <svg class="enemy-blueprint-svg" viewBox="0 0 44 44" width="${size}" height="${size}">
+      ${shieldRing}
+      ${geo}
+    </svg>
+  `;
+}

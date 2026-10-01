@@ -305,6 +305,10 @@
             <svg class="icon icon-damage" viewBox="0 0 24 24"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/><path d="M16 16l4 4"/><path d="M19 21l2-2"/></svg>
             戦闘システム・シールド破壊
           </button>
+          <button class="guide-tab-btn" data-tab="tab-skills">
+            <svg class="icon icon-satellite" viewBox="0 0 24 24"><path d="M13 7 9 3 5 7l4 4"/><path d="m17 11 4 4-4 4-4-4"/><path d="m8 12 4 4 6-6-4-4Z"/><path d="m16 8 3-3"/><path d="M9 21a6 6 0 0 0-6-6"/></svg>
+            指揮官スキル
+          </button>
           <button class="guide-tab-btn" data-tab="tab-towers">
             <svg class="icon icon-tower" viewBox="0 0 24 24"><polygon points="12 2 4 22 20 22"/><line x1="8" y1="14" x2="16" y2="14"/><line x1="10" y1="8" x2="14" y2="8"/></svg>
             タワー特徴・進化先
@@ -322,14 +326,21 @@
           </div>
         </div>
 
-        <!-- Tab 2: Towers & Evolution -->
+        <!-- Tab 2: Commander Skills -->
+        <div id="tab-skills" class="guide-tab-content hidden">
+          <div class="guide-skills-list">
+            <!-- Populated from SKILLS_GUIDE -->
+          </div>
+        </div>
+
+        <!-- Tab 3: Towers & Evolution -->
         <div id="tab-towers" class="guide-tab-content hidden">
           <div class="guide-towers-list">
             <!-- Populated from TOWER_TYPES -->
           </div>
         </div>
 
-        <!-- Tab 3: Enemies & Bosses -->
+        <!-- Tab 4: Enemies & Bosses -->
         <div id="tab-enemies" class="guide-tab-content hidden">
           <div class="guide-enemies-list">
             <!-- Populated from ENEMY_TYPES -->

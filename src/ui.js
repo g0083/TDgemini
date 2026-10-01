@@ -1,8 +1,8 @@
 // ==========================================
 // USER INTERFACE & MOBILE CONTROLLER
 // ==========================================
-import { TOWER_TYPES, MAPS, TECH_TREE, ACHIEVEMENTS, SKILLS, COMBAT_GUIDE, ENEMY_TYPES } from './constants.js';
-import { ICONS } from './icons.js';
+import { TOWER_TYPES, MAPS, TECH_TREE, ACHIEVEMENTS, SKILLS, SKILLS_GUIDE, COMBAT_GUIDE, ENEMY_TYPES } from './constants.js';
+import { ICONS, getTowerVisualSvg, getEnemyVisualSvg } from './icons.js';
 import { state } from './state.js';
 import { audio } from './audio.js';
 
@@ -149,8 +149,8 @@ export class UIManager {
       card.className = 'tower-card';
       card.dataset.type = tower.id;
       card.innerHTML = `
-        <div class="tower-icon" style="color: ${tower.color}; text-shadow: 0 0 10px ${tower.color};">
-          ${this.getTowerSymbol(tower.id)}
+        <div class="tower-icon">
+          ${getTowerVisualSvg(tower.id, tower.color, 32)}
         </div>
         <div class="tower-name">${tower.name}</div>
         <div class="tower-role-mini">${tower.role.split('・')[0]}</div>
@@ -166,17 +166,8 @@ export class UIManager {
   }
 
   getTowerSymbol(typeId) {
-    const symbols = {
-      pulse: ICONS.pulse,
-      gatling: ICONS.gear,
-      sniper: ICONS.target,
-      cryo: ICONS.snow,
-      cannon: ICONS.bomb,
-      tesla: ICONS.zap,
-      laser: ICONS.flame,
-      booster: ICONS.booster
-    };
-    return symbols[typeId] || ICONS.pulse;
+    const def = TOWER_TYPES[typeId];
+    return getTowerVisualSvg(typeId, def?.color || '#00f0ff', 24);
   }
 
   selectTowerForPurchase(typeId) {
@@ -196,9 +187,7 @@ export class UIManager {
     if (!def) return;
 
     if (this.dom.prevIcon) {
-      this.dom.prevIcon.innerHTML = this.getTowerSymbol(def.id);
-      this.dom.prevIcon.style.color = def.color;
-      this.dom.prevIcon.style.textShadow = `0 0 12px ${def.color}`;
+      this.dom.prevIcon.innerHTML = getTowerVisualSvg(def.id, def.color, 44);
     }
     if (this.dom.prevName) this.dom.prevName.innerText = def.name;
     if (this.dom.prevRole) {
@@ -597,7 +586,47 @@ export class UIManager {
       }
     }
 
-    // 2. Tab 2: Towers and Evolution list
+    // 2. Tab 2: Commander Skills Guide
+    const skillsContainer = document.querySelector('#tab-skills .guide-skills-list');
+    if (skillsContainer) {
+      skillsContainer.innerHTML = '';
+      for (const skill of SKILLS_GUIDE) {
+        const card = document.createElement('div');
+        card.className = 'guide-skill-card';
+        card.style.borderColor = skill.color;
+        card.innerHTML = `
+          <div class="guide-skill-header">
+            <div class="guide-unit-preview" style="border-color: ${skill.color}; color: ${skill.color};">
+              ${ICONS[skill.icon] || ICONS.zap}
+            </div>
+            <div class="guide-skill-title-box">
+              <strong style="color: ${skill.color}; font-size: 15px;">${skill.name}</strong>
+              <div class="guide-skill-badges">
+                <span class="badge" style="background: rgba(0, 240, 255, 0.15); border-color: ${skill.color}; color: ${skill.color};">${skill.targetType}</span>
+                <span class="badge" style="background: rgba(255, 208, 0, 0.15); color: #ffd000;">リロード: ${skill.cooldown}秒</span>
+              </div>
+            </div>
+          </div>
+          <div class="guide-skill-effect" style="border-left-color: ${skill.color};">
+            <strong>主要効果:</strong> ${skill.effect}
+          </div>
+          <div class="guide-skill-desc">${skill.desc}</div>
+          <div class="guide-skill-usage">
+            <div class="guide-usage-label">発動手順・操作方法:</div>
+            <div class="guide-usage-text">${skill.usage.replace(/\n/g, '<br>')}</div>
+          </div>
+          <div class="guide-skill-tactics">
+            <div class="guide-tactics-label">戦術活用アドバイス:</div>
+            <ul class="guide-tips-list">
+              ${skill.tips.map((t) => `<li>${t}</li>`).join('')}
+            </ul>
+          </div>
+        `;
+        skillsContainer.appendChild(card);
+      }
+    }
+
+    // 3. Tab 3: Towers and Evolution list (With Map-accurate Turret Blueprints)
     const towersContainer = document.querySelector('#tab-towers .guide-towers-list');
     if (towersContainer) {
       towersContainer.innerHTML = '';
@@ -608,9 +637,14 @@ export class UIManager {
         card.style.borderColor = tower.color;
         card.innerHTML = `
           <div class="guide-tower-header">
-            <span class="guide-tower-icon" style="color: ${tower.color};">${this.getTowerSymbol(tower.id)}</span>
+            <div class="guide-unit-preview" style="border-color: ${tower.color};">
+              ${getTowerVisualSvg(tower.id, tower.color, 38)}
+            </div>
             <div class="guide-tower-title-box">
-              <strong style="color: ${tower.color}; font-size: 15px;">${tower.name}</strong>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <strong style="color: ${tower.color}; font-size: 15px;">${tower.name}</strong>
+                <span class="guide-real-tag">実機外観</span>
+              </div>
               <span class="guide-role-tag">${tower.role}</span>
             </div>
             <span class="guide-tower-cost">${ICONS.gold} ${tower.cost}</span>
@@ -638,7 +672,7 @@ export class UIManager {
       }
     }
 
-    // 3. Tab 3: Enemy compendium
+    // 4. Tab 4: Enemy compendium (With Map-accurate Geometry Blueprints & Shield Rings)
     const enemiesContainer = document.querySelector('#tab-enemies .guide-enemies-list');
     if (enemiesContainer) {
       enemiesContainer.innerHTML = '';
@@ -648,9 +682,14 @@ export class UIManager {
         card.className = `guide-enemy-card ${enemy.isBoss ? 'boss-card' : ''}`;
         card.innerHTML = `
           <div class="guide-enemy-header">
-            <div class="guide-enemy-shape" style="color: ${enemy.color};">${enemy.isBoss ? ICONS.crown : ICONS.enemy}</div>
+            <div class="guide-unit-preview" style="border-color: ${enemy.color};">
+              ${getEnemyVisualSvg(enemy, 38)}
+            </div>
             <div class="guide-enemy-name-box">
-              <strong style="color: ${enemy.color}; font-size: 14px;">${enemy.name}</strong>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <strong style="color: ${enemy.color}; font-size: 14px;">${enemy.name}</strong>
+                <span class="guide-real-tag">実機ポリゴン</span>
+              </div>
               <div class="guide-enemy-badges">
                 ${enemy.shield ? `<span class="badge shield">SHIELD: ${enemy.shield}</span>` : ''}
                 ${enemy.armor ? `<span class="badge armor">ARMOR: -${Math.round(enemy.armor * 100)}%</span>` : ''}
