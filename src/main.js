@@ -75,8 +75,9 @@ window.addEventListener('DOMContentLoaded', () => {
   setTimeout(handleResize, 50);
   setTimeout(handleResize, 200);
 
-  // Load initial map
+  // Initialize map and show start/title screen
   game.loadStage('nexus_prime');
+  ui.showTitleScreen();
 
   // Helper to translate client coords to game canvas coords
   function getCanvasCoords(clientX, clientY) {

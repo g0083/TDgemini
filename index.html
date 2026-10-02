@@ -25,6 +25,107 @@
 </head>
 <body>
   <div id="app-container">
+    <!-- ========================================== -->
+    <!-- 0. FULLSCREEN START / TITLE SCREEN         -->
+    <!-- ========================================== -->
+    <div id="title-screen" class="title-screen">
+      <div class="title-screen-bg"></div>
+      <div class="title-screen-content">
+        <div class="title-badge">CYBER DEFENSE INITIATIVE v2.0</div>
+        <h1 class="title-logo">
+          <span class="logo-cyber">CYBER DEFENSE</span>
+          <span class="logo-sub">NEXUS</span>
+        </h1>
+        <div class="title-subtitle">ネオンタワーディフェンス プロトコル</div>
+
+        <div class="title-core-status">
+          <span class="core-icon">
+            <svg class="icon icon-core" viewBox="0 0 24 24"><polygon points="6 3 18 3 22 9 12 22 2 9"/><polyline points="11 3 8 9 12 22 16 9 13 3"/><line x1="2" y1="9" x2="22" y2="9"/></svg>
+          </span>
+          <span>量子コア保有残高:</span>
+          <strong id="title-cores-display">0</strong>
+        </div>
+
+        <!-- Primary Start CTA -->
+        <button id="btn-title-start" class="btn-title-start">
+          <div class="btn-start-glow"></div>
+          <svg class="icon icon-play" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          <div class="btn-start-text">
+            <strong>作戦出撃 (START MISSION)</strong>
+            <small>区域選択 & 難易度・変異体設定</small>
+          </div>
+        </button>
+
+        <!-- Hub Navigation Cards (Direct from Title Screen) -->
+        <div class="title-menu-grid">
+          <button id="title-btn-tech" class="title-menu-card highlight">
+            <div class="title-card-icon">
+              <svg class="icon icon-lab" viewBox="0 0 24 24"><path d="M10 2v7.31L4.69 17.5A2 2 0 0 0 6.38 21h11.24a2 2 0 0 0 1.69-3.5L14 9.31V2"/><line x1="8" y1="2" x2="16" y2="2"/><line x1="6" y1="16" x2="18" y2="16"/></svg>
+            </div>
+            <div class="title-card-info">
+              <strong>量子研究所</strong>
+              <small>永続アップグレード</small>
+            </div>
+          </button>
+
+          <button id="title-btn-mastery" class="title-menu-card mastery">
+            <div class="title-card-icon">
+              <svg class="icon icon-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+            </div>
+            <div class="title-card-info">
+              <strong>タワー熟練度</strong>
+              <small>全8兵科の育成・特典</small>
+            </div>
+          </button>
+
+          <button id="title-btn-guide" class="title-menu-card info">
+            <div class="title-card-icon">
+              <svg class="icon icon-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            </div>
+            <div class="title-card-info">
+              <strong>戦術マニュアル</strong>
+              <small>シールド破壊・敵図鑑</small>
+            </div>
+          </button>
+
+          <button id="title-btn-achieve" class="title-menu-card">
+            <div class="title-card-icon">
+              <svg class="icon icon-trophy" viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.45 1-1 1H8c-.55 0-1 .45-1 1v1c0 .55.45 1 1 1h8c.55 0 1-.45 1-1v-1c0-.55-.45-1-1-1h-1c-.55 0-1-.45-1-1v-2.34"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>
+            </div>
+            <div class="title-card-info">
+              <strong>実績・アチーブ</strong>
+              <small>達成報酬でコア獲得</small>
+            </div>
+          </button>
+
+          <button id="title-btn-records" class="title-menu-card">
+            <div class="title-card-icon">
+              <svg class="icon icon-trophy" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            </div>
+            <div class="title-card-info">
+              <strong>司令官戦績記録</strong>
+              <small>総撃破・到達記録</small>
+            </div>
+          </button>
+
+          <button id="title-btn-settings" class="title-menu-card">
+            <div class="title-card-icon">
+              <svg class="icon icon-wrench" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+            </div>
+            <div class="title-card-info">
+              <strong>音響・設定</strong>
+              <small>BGM/SE・演出設定</small>
+            </div>
+          </button>
+        </div>
+
+        <div class="title-screen-footer">
+          <span>PC: マウス操作 / スマホ: タッチ操作対応</span>
+          <span>© 2026 NEXUS COMMAND DEFENSE SYSTEMS</span>
+        </div>
+      </div>
+    </div>
+
     <!-- Top HUD Bar: Minimalist & 1-Row Responsive (No Horizontal Scroll) -->
     <header id="hud-header">
       <div class="hud-group left">
@@ -343,6 +444,10 @@
           <button id="menu-btn-restart" class="btn-restart-mission">
             <svg class="icon icon-restart" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
             このミッションをリスタート
+          </button>
+          <button id="menu-btn-to-title" class="btn-to-title">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            タイトル画面に戻る
           </button>
         </div>
       </div>
@@ -690,21 +795,29 @@
         <p id="result-desc" class="result-desc">拠点の防衛に成功しました。</p>
         <div id="result-stats" class="result-stats-box"></div>
         <div class="result-actions">
-          <button id="btn-result-retry" class="btn-result highlight">
+          <button id="btn-result-next" class="btn-result highlight hidden">
+            <svg class="icon icon-play" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            次の作戦区域へ出撃
+          </button>
+          <button id="btn-result-retry" class="btn-result">
             <svg class="icon icon-restart" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
             再挑戦
-          </button>
-          <button id="btn-result-guide" class="btn-result">
-            <svg class="icon icon-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-            戦術マニュアルで弱点を確認
-          </button>
-          <button id="btn-result-tech" class="btn-result">
-            <svg class="icon icon-lab" viewBox="0 0 24 24"><path d="M10 2v7.31L4.69 17.5A2 2 0 0 0 6.38 21h11.24a2 2 0 0 0 1.69-3.5L14 9.31V2"/><line x1="8" y1="2" x2="16" y2="2"/><line x1="6" y1="16" x2="18" y2="16"/></svg>
-            研究所で永続強化
           </button>
           <button id="btn-result-select" class="btn-result">
             <svg class="icon icon-map" viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
             作戦区域選択
+          </button>
+          <button id="btn-result-tech" class="btn-result">
+            <svg class="icon icon-lab" viewBox="0 0 24 24"><path d="M10 2v7.31L4.69 17.5A2 2 0 0 0 6.38 21h11.24a2 2 0 0 0 1.69-3.5L14 9.31V2"/><line x1="8" y1="2" x2="16" y2="2"/><line x1="6" y1="16" x2="18" y2="16"/></svg>
+            量子研究所
+          </button>
+          <button id="btn-result-guide" class="btn-result">
+            <svg class="icon icon-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            戦術マニュアル
+          </button>
+          <button id="btn-result-to-title" class="btn-result to-title">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            タイトル画面へ戻る
           </button>
         </div>
       </div>

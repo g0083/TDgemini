@@ -13,9 +13,23 @@ export class UIManager {
     this.selectedShopType = null;
     this.selectedDifficulty = 'NORMAL';
     this.selectedModifiers = new Set();
+    this.wasAutoPausedByModal = false;
+    this.isTitleScreenOpen = true;
+    this.nextStageId = null;
 
     // Cache DOM Elements
     this.dom = {
+      // Fullscreen Title / Start Screen
+      titleScreen: document.getElementById('title-screen'),
+      titleCoresDisplay: document.getElementById('title-cores-display'),
+      btnTitleStart: document.getElementById('btn-title-start'),
+      titleBtnTech: document.getElementById('title-btn-tech'),
+      titleBtnMastery: document.getElementById('title-btn-mastery'),
+      titleBtnGuide: document.getElementById('title-btn-guide'),
+      titleBtnAchieve: document.getElementById('title-btn-achieve'),
+      titleBtnRecords: document.getElementById('title-btn-records'),
+      titleBtnSettings: document.getElementById('title-btn-settings'),
+
       // HUD
       baseHp: document.getElementById('hud-hp'),
       baseHpMax: document.getElementById('hud-hp-max'),
@@ -84,6 +98,7 @@ export class UIManager {
       // Modals
       modalBackdrop: document.getElementById('modal-backdrop'),
       mainMenuModal: document.getElementById('modal-main-menu'),
+      menuBtnToTitle: document.getElementById('menu-btn-to-title'),
       settingsModal: document.getElementById('modal-settings'),
       guideModal: document.getElementById('modal-guide'),
       techModal: document.getElementById('modal-tech'),
@@ -122,10 +137,12 @@ export class UIManager {
       resultTitle: document.getElementById('result-title'),
       resultDesc: document.getElementById('result-desc'),
       resultStats: document.getElementById('result-stats'),
+      resultNextBtn: document.getElementById('btn-result-next'),
       resultRetryBtn: document.getElementById('btn-result-retry'),
       resultGuideBtn: document.getElementById('btn-result-guide'),
       resultSelectBtn: document.getElementById('btn-result-select'),
       resultTechBtn: document.getElementById('btn-result-tech'),
+      resultToTitleBtn: document.getElementById('btn-result-to-title'),
 
       // Settings Controls
       settingBgmToggle: document.getElementById('setting-bgm-toggle'),
@@ -322,11 +339,42 @@ export class UIManager {
     this.dom.pauseBtn?.addEventListener('click', () => {
       audio.ensureContext();
       this.game.isPaused = !this.game.isPaused;
-      this.dom.pauseBtn.innerHTML = this.game.isPaused ? ICONS.play : ICONS.pause;
+      this.wasAutoPausedByModal = false;
+      this.updatePauseButton();
     });
 
     this.dom.guideQuickBtn?.addEventListener('click', () => {
       this.openGuideModal();
+    });
+
+    // 1.5 Fullscreen Title Screen Buttons
+    this.dom.btnTitleStart?.addEventListener('click', () => {
+      audio.ensureContext();
+      this.openStageModal();
+    });
+    this.dom.titleBtnTech?.addEventListener('click', () => {
+      audio.ensureContext();
+      this.openTechModal();
+    });
+    this.dom.titleBtnMastery?.addEventListener('click', () => {
+      audio.ensureContext();
+      this.openMasteryModal();
+    });
+    this.dom.titleBtnGuide?.addEventListener('click', () => {
+      audio.ensureContext();
+      this.openGuideModal();
+    });
+    this.dom.titleBtnAchieve?.addEventListener('click', () => {
+      audio.ensureContext();
+      this.openAchieveModal();
+    });
+    this.dom.titleBtnRecords?.addEventListener('click', () => {
+      audio.ensureContext();
+      this.openRecordsModal();
+    });
+    this.dom.titleBtnSettings?.addEventListener('click', () => {
+      audio.ensureContext();
+      this.openSettingsModal();
     });
 
     // 2. Main Menu Button in Header
@@ -350,6 +398,12 @@ export class UIManager {
     // 3. Wave start button
     this.dom.waveActionBtn?.addEventListener('click', () => {
       audio.ensureContext();
+      if (this.game.waveState === 'SELECTING_PROTOCOL') {
+        // If protocol modal was somehow hidden, reopen it
+        this.dom.modalBackdrop?.classList.remove('hidden');
+        this.dom.protocolModal?.classList.remove('hidden');
+        return;
+      }
       this.game.startNextWaveImmediately();
     });
 
@@ -380,6 +434,10 @@ export class UIManager {
     document.getElementById('menu-btn-restart')?.addEventListener('click', () => {
       this.closeModals();
       this.game.loadStage(this.game.currentMapId, this.game.isEndless);
+    });
+    this.dom.menuBtnToTitle?.addEventListener('click', () => {
+      audio.ensureContext();
+      this.showTitleScreen();
     });
 
     // Settings Modal Events
@@ -434,7 +492,24 @@ export class UIManager {
       btn.addEventListener('click', () => this.closeModals());
     });
     this.dom.modalBackdrop?.addEventListener('click', (e) => {
-      if (e.target === this.dom.modalBackdrop) this.closeModals();
+      if (e.target === this.dom.modalBackdrop) {
+        // Prevent closing protocol draft modal (game is paused awaiting selection)
+        if (this.game.waveState === 'SELECTING_PROTOCOL' || !this.dom.protocolModal?.classList.contains('hidden')) {
+          audio.ensureContext();
+          audio.playHit();
+          this.dom.protocolModal?.classList.remove('modal-shake');
+          void this.dom.protocolModal?.offsetWidth;
+          this.dom.protocolModal?.classList.add('modal-shake');
+          return;
+        }
+
+        // Prevent closing result modal on accidental backdrop tap
+        if (!this.dom.resultModal?.classList.contains('hidden')) {
+          return;
+        }
+
+        this.closeModals();
+      }
     });
 
     // 7. Guide Modal Tabs
@@ -494,8 +569,16 @@ export class UIManager {
     });
 
     // 9. Result Modal Buttons
+    this.dom.resultNextBtn?.addEventListener('click', () => {
+      if (this.nextStageId) {
+        this.closeModals();
+        this.hideTitleScreen();
+        this.game.loadStage(this.nextStageId, false, this.selectedDifficulty, Array.from(this.selectedModifiers));
+      }
+    });
     this.dom.resultRetryBtn?.addEventListener('click', () => {
       this.closeModals();
+      this.hideTitleScreen();
       this.game.loadStage(this.game.currentMapId, this.game.isEndless, this.selectedDifficulty, Array.from(this.selectedModifiers));
     });
     this.dom.resultGuideBtn?.addEventListener('click', () => {
@@ -508,6 +591,10 @@ export class UIManager {
     this.dom.resultTechBtn?.addEventListener('click', () => {
       this.closeModals();
       this.openTechModal();
+    });
+    this.dom.resultToTitleBtn?.addEventListener('click', () => {
+      audio.ensureContext();
+      this.showTitleScreen();
     });
 
     // 10. Game Engine Callbacks
@@ -538,7 +625,12 @@ export class UIManager {
     }
 
     // Wave Action Button
-    if (waveState === 'INTERMISSION') {
+    if (waveState === 'SELECTING_PROTOCOL') {
+      this.dom.waveActionBtn?.classList.remove('busy');
+      if (this.dom.waveActionText) {
+        this.dom.waveActionText.innerText = '⚡ 戦術プロトコルを選択してください (TAP)';
+      }
+    } else if (waveState === 'INTERMISSION') {
       this.dom.waveActionBtn?.classList.remove('busy');
       if (this.dom.waveActionText) {
         this.dom.waveActionText.innerText = `NEXT WAVE IN ${waveTimer}s (TAP TO RUSH)`;
@@ -735,25 +827,81 @@ export class UIManager {
     }
   }
 
+  // --- Pause & Title Screen Management ---
+
+  updatePauseButton() {
+    if (this.dom.pauseBtn) {
+      this.dom.pauseBtn.innerHTML = this.game.isPaused ? ICONS.play : ICONS.pause;
+      this.dom.pauseBtn.title = this.game.isPaused ? '作戦再開 (Resume)' : '作戦一時停止 (Pause)';
+    }
+  }
+
+  pauseGameForModal() {
+    if (!this.game.isPaused) {
+      this.game.isPaused = true;
+      this.wasAutoPausedByModal = true;
+      this.updatePauseButton();
+    }
+  }
+
+  resumeGameFromModal() {
+    if (this.wasAutoPausedByModal && !this.isTitleScreenOpen) {
+      this.game.isPaused = false;
+      this.wasAutoPausedByModal = false;
+      this.updatePauseButton();
+    }
+  }
+
+  showTitleScreen() {
+    this.isTitleScreenOpen = true;
+    this.game.isPaused = true;
+    this.updatePauseButton();
+    this.closeModals(true);
+    this.dom.titleScreen?.classList.remove('hidden');
+    if (this.dom.titleCoresDisplay) {
+      this.dom.titleCoresDisplay.innerText = (state.data.quantumCores || 0).toLocaleString();
+    }
+  }
+
+  hideTitleScreen() {
+    this.isTitleScreenOpen = false;
+    this.dom.titleScreen?.classList.add('hidden');
+    this.game.isPaused = false;
+    this.wasAutoPausedByModal = false;
+    this.updatePauseButton();
+  }
+
   // --- Modals ---
 
-  closeModals() {
-    this.dom.modalBackdrop?.classList.add('hidden');
+  closeModals(keepTitle = false) {
+    const isSelectingProtocol = this.game.waveState === 'SELECTING_PROTOCOL';
+
     this.dom.mainMenuModal?.classList.add('hidden');
     this.dom.settingsModal?.classList.add('hidden');
     this.dom.guideModal?.classList.add('hidden');
     this.dom.techModal?.classList.add('hidden');
     this.dom.achieveModal?.classList.add('hidden');
     this.dom.stageModal?.classList.add('hidden');
-    this.dom.protocolModal?.classList.add('hidden');
+    if (!isSelectingProtocol) {
+      this.dom.protocolModal?.classList.add('hidden');
+    }
     this.dom.activeProtocolsModal?.classList.add('hidden');
     this.dom.masteryModal?.classList.add('hidden');
     this.dom.recordsModal?.classList.add('hidden');
     this.dom.resultModal?.classList.add('hidden');
+
+    if (!isSelectingProtocol) {
+      this.dom.modalBackdrop?.classList.add('hidden');
+    }
+
+    if (!keepTitle && !this.isTitleScreenOpen) {
+      this.resumeGameFromModal();
+    }
   }
 
   openMainMenuModal() {
     audio.ensureContext();
+    this.pauseGameForModal();
     this.dom.modalBackdrop?.classList.remove('hidden');
     this.dom.mainMenuModal?.classList.remove('hidden');
     this.dom.settingsModal?.classList.add('hidden');
@@ -765,6 +913,7 @@ export class UIManager {
 
   openSettingsModal() {
     audio.ensureContext();
+    this.pauseGameForModal();
     this.dom.modalBackdrop?.classList.remove('hidden');
     this.dom.mainMenuModal?.classList.add('hidden');
     this.dom.settingsModal?.classList.remove('hidden');
@@ -804,6 +953,7 @@ export class UIManager {
 
   openGuideModal() {
     audio.ensureContext();
+    this.pauseGameForModal();
     this.dom.modalBackdrop?.classList.remove('hidden');
     this.dom.mainMenuModal?.classList.add('hidden');
     this.dom.settingsModal?.classList.add('hidden');
@@ -976,6 +1126,7 @@ export class UIManager {
 
   openTechModal() {
     audio.ensureContext();
+    this.pauseGameForModal();
     this.dom.modalBackdrop?.classList.remove('hidden');
     this.dom.mainMenuModal?.classList.add('hidden');
     this.dom.settingsModal?.classList.add('hidden');
@@ -1027,6 +1178,7 @@ export class UIManager {
 
   openAchieveModal() {
     audio.ensureContext();
+    this.pauseGameForModal();
     this.dom.modalBackdrop?.classList.remove('hidden');
     this.dom.mainMenuModal?.classList.add('hidden');
     this.dom.settingsModal?.classList.add('hidden');
@@ -1058,6 +1210,7 @@ export class UIManager {
 
   openStageModal() {
     audio.ensureContext();
+    this.pauseGameForModal();
     this.dom.modalBackdrop?.classList.remove('hidden');
     this.dom.mainMenuModal?.classList.add('hidden');
     this.dom.settingsModal?.classList.add('hidden');
@@ -1196,11 +1349,13 @@ export class UIManager {
 
       card.querySelector('.btn-play-stage')?.addEventListener('click', () => {
         this.closeModals();
+        this.hideTitleScreen();
         this.game.loadStage(map.id, false, this.selectedDifficulty, Array.from(this.selectedModifiers));
       });
 
       card.querySelector('.btn-play-endless')?.addEventListener('click', () => {
         this.closeModals();
+        this.hideTitleScreen();
         this.game.loadStage(map.id, true, this.selectedDifficulty, Array.from(this.selectedModifiers));
       });
 
@@ -1213,6 +1368,7 @@ export class UIManager {
   showProtocolModal(protocols, rerollsLeft = 0) {
     audio.ensureContext();
     audio.playVictory(); // Celebratory sound for unlocking draft
+    this.pauseGameForModal();
 
     this.dom.modalBackdrop?.classList.remove('hidden');
     this.dom.protocolModal?.classList.remove('hidden');
@@ -1260,6 +1416,7 @@ export class UIManager {
 
   openActiveProtocolsModal() {
     audio.ensureContext();
+    this.pauseGameForModal();
     this.dom.modalBackdrop?.classList.remove('hidden');
     this.dom.activeProtocolsModal?.classList.remove('hidden');
 
@@ -1296,6 +1453,7 @@ export class UIManager {
 
   openMasteryModal() {
     audio.ensureContext();
+    this.pauseGameForModal();
     this.dom.modalBackdrop?.classList.remove('hidden');
     this.dom.mainMenuModal?.classList.add('hidden');
     this.dom.settingsModal?.classList.add('hidden');
@@ -1363,6 +1521,7 @@ export class UIManager {
 
   openRecordsModal() {
     audio.ensureContext();
+    this.pauseGameForModal();
     this.dom.modalBackdrop?.classList.remove('hidden');
     this.dom.mainMenuModal?.classList.add('hidden');
     this.dom.settingsModal?.classList.add('hidden');
@@ -1465,44 +1624,71 @@ export class UIManager {
   // --- Result Modals ---
 
   showGameOverModal(wave, score = 0) {
+    this.pauseGameForModal();
     this.dom.modalBackdrop?.classList.remove('hidden');
     this.dom.resultModal?.classList.remove('hidden');
+    this.dom.resultNextBtn?.classList.add('hidden');
+    this.nextStageId = null;
+
     if (this.dom.resultTitle) {
       this.dom.resultTitle.innerText = 'MISSION FAILED';
       this.dom.resultTitle.className = 'result-title defeat';
     }
     if (this.dom.resultDesc) {
-      this.dom.resultDesc.innerText = '防衛ラインが突破されました。敵の弱点に応じた兵科配置や、量子研究所での永続強化、戦術プロトコルを見直して再挑戦せよ。';
+      this.dom.resultDesc.innerText = '防衛ラインが突破されました。敵の弱点に応じた兵科の選定、量子研究所での恒久強化、または戦術プロトコルを見直して再挑戦せよ。';
     }
     if (this.dom.resultStats) {
+      const mapData = MAPS.find((m) => m.id === this.game.currentMapId);
       this.dom.resultStats.innerHTML = `
+        <div class="res-stat">作戦区域: <strong>${mapData?.name || this.game.currentMapId}</strong></div>
         <div class="res-stat">作戦難易度: <strong>${this.selectedDifficulty}</strong></div>
-        <div class="res-stat">到達ウェーブ: <strong>${wave}</strong></div>
-        <div class="res-stat">獲得スコア: <strong>${(score || 0).toLocaleString()} pt</strong></div>
+        <div class="res-stat highlight">到達ウェーブ: <strong>Wave ${wave}</strong></div>
+        <div class="res-stat">最終スコア: <strong>${(score || 0).toLocaleString()} pt</strong></div>
+        <div class="res-stat">配備タワー数: <strong>${this.game.towers.length} 基</strong></div>
         <div class="res-stat">所持コア: <strong>${ICONS.core} ${state.data.quantumCores}</strong></div>
       `;
     }
   }
 
   showVictoryModal(wave, isFlawless, coreReward = 0, score = 0) {
+    this.pauseGameForModal();
     this.dom.modalBackdrop?.classList.remove('hidden');
     this.dom.resultModal?.classList.remove('hidden');
+
+    const currentIdx = MAPS.findIndex((m) => m.id === this.game.currentMapId);
+    const nextMap = MAPS[currentIdx + 1];
+    if (nextMap && !this.game.isEndless) {
+      this.nextStageId = nextMap.id;
+      this.dom.resultNextBtn?.classList.remove('hidden');
+      if (this.dom.resultNextBtn) {
+        this.dom.resultNextBtn.innerHTML = `
+          <svg class="icon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          次の作戦区域へ (${nextMap.name})
+        `;
+      }
+    } else {
+      this.nextStageId = null;
+      this.dom.resultNextBtn?.classList.add('hidden');
+    }
+
     if (this.dom.resultTitle) {
       this.dom.resultTitle.innerText = isFlawless ? 'PERFECT VICTORY (FLAWLESS ★★★)' : 'MISSION ACCOMPLISHED';
       this.dom.resultTitle.className = 'result-title victory';
     }
     if (this.dom.resultDesc) {
       this.dom.resultDesc.innerText = isFlawless
-        ? '拠点HPの無傷防衛を達成！追加のクォンタムコアと最高評価を獲得しました。'
+        ? '拠点HPの無傷防衛を達成！完全防衛ボーナスを含む最高報酬のクォンタムコアを獲得しました。'
         : 'すべての敵性勢力を殲滅し作戦区域を制圧しました！新たなクォンタムコアを獲得しました。';
     }
     if (this.dom.resultStats) {
+      const mapData = MAPS.find((m) => m.id === this.game.currentMapId);
       this.dom.resultStats.innerHTML = `
+        <div class="res-stat">作戦区域: <strong>${mapData?.name || this.game.currentMapId}</strong></div>
         <div class="res-stat">作戦難易度: <strong>${this.selectedDifficulty}</strong></div>
-        <div class="res-stat">クリアウェーブ: <strong>${wave}</strong></div>
-        <div class="res-stat">獲得コア: <strong>${ICONS.core} +${coreReward}</strong></div>
+        <div class="res-stat highlight">クリアウェーブ: <strong>Wave ${wave}</strong></div>
+        <div class="res-stat highlight">獲得コア: <strong>${ICONS.core} +${coreReward}</strong></div>
+        <div class="res-stat">防衛評価: <strong>${isFlawless ? '★★★ FLAWLESS (完全防衛)' : 'CLEAR'}</strong></div>
         <div class="res-stat">最終スコア: <strong>${(score || 0).toLocaleString()} pt</strong></div>
-        <div class="res-stat">防衛評価: <strong>${isFlawless ? 'FLAWLESS (完全防衛)' : 'CLEAR'}</strong></div>
       `;
     }
   }
