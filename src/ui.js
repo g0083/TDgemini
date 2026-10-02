@@ -1062,6 +1062,7 @@ export class UIManager {
     this.dom.mainMenuModal?.classList.add('hidden');
     this.dom.settingsModal?.classList.add('hidden');
     this.dom.stageModal?.classList.remove('hidden');
+    if (this.dom.stageModal) this.dom.stageModal.scrollTop = 0;
     this.renderStageDifficultyAndMutators();
     this.renderStages();
   }
@@ -1154,22 +1155,24 @@ export class UIManager {
       const card = document.createElement('div');
       card.className = `stage-card ${record.cleared ? 'cleared' : ''}`;
 
-      // Star display
+      // Star / Clear display
       const starsCount = record.stars || 0;
-      const starsHtml = '★'.repeat(starsCount) + '☆'.repeat(Math.max(0, 3 - starsCount));
+      let starsHtml = '';
+      if (record.cleared) {
+        starsHtml = `<span class="stage-stars-cleared">${'★'.repeat(starsCount)}${'☆'.repeat(Math.max(0, 3 - starsCount))}</span>`;
+      } else {
+        starsHtml = `<span class="stage-status-unclear">未クリア</span>`;
+      }
 
       // Highest difficulty clear tag
       const diffTag = record.highestDifficulty ? `<span class="stage-diff-badge diff-${record.highestDifficulty.toLowerCase()}">${record.highestDifficulty}</span>` : '';
 
       card.innerHTML = `
         <div class="stage-header">
-          <div class="stage-title-wrap">
-            <span class="stage-id-pill">STAGE ${map.id}</span>
-            <span class="stage-name">${map.name}</span>
-          </div>
+          <div class="stage-name">${map.name}</div>
           <div class="stage-ratings">
-            <span class="stage-stars">${starsHtml}</span>
             ${diffTag}
+            ${starsHtml}
           </div>
         </div>
         <div class="stage-desc">${map.desc}</div>

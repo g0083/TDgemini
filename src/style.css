@@ -1129,8 +1129,9 @@ html, body {
 }
 
 .cyber-modal {
-  width: 100%;
+  width: 96%;
   max-width: 600px;
+  box-sizing: border-box;
   max-height: 90vh;
   background: rgba(12, 20, 36, 0.96);
   border: 1px solid var(--color-cyan);
@@ -1354,15 +1355,22 @@ html, body {
 }
 
 /* Stage Grid */
+.stage-select-modal,
 .stage-modal {
-  max-width: 860px;
+  max-width: 960px;
 }
 
 .stages-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 10px;
   margin-top: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.stages-grid > * {
+  min-width: 0;
 }
 
 .stage-card {
@@ -1374,6 +1382,10 @@ html, body {
   flex-direction: column;
   gap: 6px;
   transition: all 0.15s;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  width: 100%;
 }
 
 .stage-card.cleared {
@@ -1384,6 +1396,8 @@ html, body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  min-width: 0;
+  gap: 6px;
 }
 
 .stage-name {
@@ -1391,17 +1405,23 @@ html, body {
   font-size: 14px;
   font-weight: 700;
   color: var(--color-cyan);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .stage-diff {
   color: var(--color-yellow);
   font-size: 12px;
   letter-spacing: 2px;
+  flex-shrink: 0;
 }
 
 .stage-desc {
-  font-size: 12px;
+  font-size: 11px;
   color: #a0b6d6;
+  line-height: 1.35;
+  word-break: break-word;
 }
 
 .stage-footer {
@@ -1414,28 +1434,43 @@ html, body {
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   padding-top: 8px;
   font-size: 11px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.stage-meta-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
 }
 
 .stage-reward {
   color: var(--color-cyan);
   font-weight: 700;
   font-family: var(--font-mono);
+  font-size: 11px;
+  white-space: nowrap;
 }
 
 .stage-btns {
   display: flex;
   gap: 6px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
 }
 
 .btn-play-stage, .btn-play-endless {
-  padding: 6px 12px;
+  padding: 6px 10px;
   border-radius: 6px;
   font-family: var(--font-header);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   cursor: pointer;
   border: none;
   transition: all 0.15s;
+  white-space: nowrap;
 }
 
 .btn-play-stage {
@@ -2509,9 +2544,15 @@ html, body {
 /* Difficulty Buttons Group */
 .diff-btn-group {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
   gap: 8px;
   margin-bottom: 14px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.diff-btn-group > * {
+  min-width: 0;
 }
 
 .btn-diff {
@@ -2526,6 +2567,8 @@ html, body {
   cursor: pointer;
   transition: all 0.2s ease;
   color: #a0b6d6;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .btn-diff .diff-title {
@@ -2580,9 +2623,15 @@ html, body {
 /* Mutators Grid */
 .mutators-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 8px;
   margin-bottom: 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.mutators-grid > * {
+  min-width: 0;
 }
 
 .mutator-card {
@@ -2595,6 +2644,9 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .mutator-card:hover {
@@ -2612,11 +2664,14 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  min-width: 0;
+  gap: 4px;
 }
 
 .mutator-icon {
   font-size: 16px;
-  margin-right: 6px;
+  margin-right: 4px;
+  flex-shrink: 0;
 }
 
 .mutator-name {
@@ -2624,6 +2679,10 @@ html, body {
   font-size: 12px;
   color: #e2e8f0;
   flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .mutator-check {
@@ -2633,6 +2692,7 @@ html, body {
   border-radius: 3px;
   background: rgba(255, 255, 255, 0.1);
   color: #718096;
+  flex-shrink: 0;
 }
 
 .mutator-card.active .mutator-check {
@@ -2646,12 +2706,14 @@ html, body {
   font-size: 10px;
   color: #94a3b8;
   line-height: 1.3;
+  word-break: break-word;
 }
 
 .mutator-bonus {
   display: flex;
   gap: 6px;
   margin-top: 2px;
+  flex-wrap: wrap;
 }
 
 .badge.bonus {
@@ -2661,6 +2723,7 @@ html, body {
   color: var(--color-green);
   font-family: var(--font-mono);
   font-weight: 700;
+  white-space: nowrap;
 }
 
 /* Reward Preview Bar */
@@ -2668,10 +2731,14 @@ html, body {
   display: flex;
   justify-content: space-around;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
   background: rgba(0, 240, 255, 0.05);
   border: 1px dashed rgba(0, 240, 255, 0.3);
   border-radius: 8px;
   padding: 8px 12px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .rew-item {
@@ -2694,33 +2761,31 @@ html, body {
 }
 
 /* Stage Card Extras */
-.stage-title-wrap {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.stage-id-pill {
-  font-family: var(--font-header);
-  font-size: 9px;
-  background: rgba(0, 240, 255, 0.15);
-  border: 1px solid var(--color-cyan);
-  color: var(--color-cyan);
-  padding: 1px 5px;
-  border-radius: 3px;
-}
-
 .stage-ratings {
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-shrink: 0;
 }
 
-.stage-stars {
+.stage-status-unclear {
+  font-size: 10px;
+  color: #64748b;
+  font-family: var(--font-header);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 1px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  letter-spacing: 0.5px;
+}
+
+.stage-stars-cleared {
   color: #ffd000;
   letter-spacing: 2px;
   font-size: 12px;
   text-shadow: 0 0 8px rgba(255, 208, 0, 0.6);
+  white-space: nowrap;
 }
 
 .stage-diff-badge {
@@ -3003,14 +3068,20 @@ html, body {
    TOWER MASTERY MODAL & CARDS
    =================================================== */
 .mastery-modal {
-  max-width: 840px;
+  max-width: 960px;
 }
 
 .mastery-cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 12px;
   margin-top: 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.mastery-cards-grid > * {
+  min-width: 0;
 }
 
 .mastery-card-item {
@@ -3022,6 +3093,10 @@ html, body {
   flex-direction: column;
   gap: 8px;
   transition: all 0.2s;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  width: 100%;
 }
 
 .mastery-card-item:hover {
@@ -3039,12 +3114,15 @@ html, body {
 .mastery-card-head {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .mastery-icon-box {
-  width: 44px;
-  height: 44px;
+  width: 42px;
+  height: 42px;
   background: rgba(6, 12, 24, 0.8);
   border: 1px solid;
   border-radius: 8px;
@@ -3056,13 +3134,18 @@ html, body {
 
 .mastery-title-box {
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .mastery-tower-name {
   font-family: var(--font-header);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .mastery-rank-badge {
@@ -3070,12 +3153,17 @@ html, body {
   color: var(--color-cyan);
   font-family: var(--font-header);
   margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .mastery-kills-display {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 11px;
   color: #94a3b8;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .mastery-progress-track {
@@ -3104,6 +3192,7 @@ html, body {
   font-size: 10px;
   color: #64748b;
   font-family: var(--font-mono);
+  min-width: 0;
 }
 
 .mastery-progress-label strong {
@@ -3115,6 +3204,9 @@ html, body {
   border-radius: 6px;
   padding: 8px 10px;
   margin-top: 2px;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .perks-label {
@@ -3129,6 +3221,8 @@ html, body {
   font-size: 11px;
   color: #e2e8f0;
   line-height: 1.35;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .perks-next {
@@ -3137,6 +3231,8 @@ html, body {
   margin-top: 4px;
   border-top: 1px dashed rgba(255, 255, 255, 0.08);
   padding-top: 4px;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .perks-next.max {
@@ -3148,7 +3244,7 @@ html, body {
    COMMANDER DOSSIER / RECORDS MODAL
    =================================================== */
 .records-modal {
-  max-width: 840px;
+  max-width: 960px;
 }
 
 .dossier-stats-grid {
