@@ -12,6 +12,7 @@ class AudioManager {
     this.bgmStep = 0;
     this.bgmTimer = null;
     this.isMuted = false;
+    this.lastSoundTimes = {};
   }
 
   init() {
@@ -24,7 +25,8 @@ class AudioManager {
       this.bgmGain = this.ctx.createGain();
       this.sfxGain = this.ctx.createGain();
 
-      this.bgmGain.gain.setValueAtTime(state.data.settings.bgmVolume, this.ctx.currentTime);
+      const bgmVol = (state.data.settings.bgmEnabled !== false) ? state.data.settings.bgmVolume : 0;
+      this.bgmGain.gain.setValueAtTime(bgmVol, this.ctx.currentTime);
       this.sfxGain.gain.setValueAtTime(state.data.settings.sfxVolume, this.ctx.currentTime);
 
       this.bgmGain.connect(this.ctx.destination);
@@ -43,26 +45,53 @@ class AudioManager {
     }
   }
 
+  canPlaySound(key, minIntervalMs = 35) {
+    const now = performance.now();
+    const last = this.lastSoundTimes[key] || 0;
+    if (now - last < minIntervalMs) return false;
+    this.lastSoundTimes[key] = now;
+    return true;
+  }
+
   setBgmVolume(val) {
-    if (this.bgmGain && this.ctx) {
-      this.bgmGain.gain.setValueAtTime(val, this.ctx.currentTime);
-    }
     state.data.settings.bgmVolume = val;
     state.save();
+    if (this.bgmGain && this.ctx) {
+      const effective = (state.data.settings.bgmEnabled !== false) ? val : 0;
+      this.bgmGain.gain.setValueAtTime(effective, this.ctx.currentTime);
+    }
+    if (state.data.settings.bgmEnabled !== false && val > 0 && !this.isBgmPlaying) {
+      this.startBgm();
+    }
   }
 
   setSfxVolume(val) {
+    state.data.settings.sfxVolume = val;
+    state.save();
     if (this.sfxGain && this.ctx) {
       this.sfxGain.gain.setValueAtTime(val, this.ctx.currentTime);
     }
-    state.data.settings.sfxVolume = val;
+  }
+
+  setBgmEnabled(enabled) {
+    state.data.settings.bgmEnabled = enabled;
     state.save();
+    if (this.bgmGain && this.ctx) {
+      const effective = enabled ? state.data.settings.bgmVolume : 0;
+      this.bgmGain.gain.setValueAtTime(effective, this.ctx.currentTime);
+    }
+    if (enabled) {
+      if (!this.isBgmPlaying) this.startBgm();
+    } else {
+      this.stopBgm();
+    }
   }
 
   // --- Sound Effects ---
 
   playShoot(type = 'pulse') {
     if (!this.ctx || state.data.settings.sfxVolume <= 0) return;
+    if (!this.canPlaySound('shoot_' + type, 35)) return;
     this.ensureContext();
     const now = this.ctx.currentTime;
 
@@ -178,6 +207,7 @@ class AudioManager {
 
   playExplosion(intensity = 1.0) {
     if (!this.ctx || state.data.settings.sfxVolume <= 0) return;
+    if (!this.canPlaySound('explosion', 45)) return;
     this.ensureContext();
     const duration = 0.25 * intensity;
     this.playNoise(duration, 0.5 * intensity, 800);
@@ -201,6 +231,7 @@ class AudioManager {
 
   playHit() {
     if (!this.ctx || state.data.settings.sfxVolume <= 0) return;
+    if (!this.canPlaySound('hit', 40)) return;
     this.ensureContext();
     const now = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
@@ -351,7 +382,7 @@ class AudioManager {
   // --- Procedural Cyberpunk BGM Engine ---
   startBgm() {
     this.ensureContext();
-    if (!this.ctx || this.isBgmPlaying) return;
+    if (!this.ctx || this.isBgmPlaying || state.data.settings.bgmEnabled === false) return;
     this.isBgmPlaying = true;
     this.bgmStep = 0;
 

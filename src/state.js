@@ -41,6 +41,7 @@ class StateManager {
       unlockedAchievements: [],
       stageRecords: {}, // { stageId: { highestWave: 0, stars: 0, cleared: false } }
       settings: {
+        bgmEnabled: true,
         bgmVolume: 0.4,
         sfxVolume: 0.6,
         screenShake: true,

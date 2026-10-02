@@ -124,6 +124,7 @@ export class EffectsManager {
     this.texts = [];
     this.shakeIntensity = 0;
     this.shakeDuration = 0;
+    this.gameSpeed = 1.0;
   }
 
   clear() {
@@ -151,31 +152,53 @@ export class EffectsManager {
 
   addText(x, y, text, color = '#ffffff', options = {}) {
     if (!state.data.settings.damageNumbers) return;
+    // At high speeds (5x, 8x), skip non-critical spam text to save CPU and canvas draw calls
+    if (this.gameSpeed >= 5.0 && !options.isCrit && Math.random() > 0.15) {
+      return;
+    }
+    // Hard ceiling on active floating text
+    if (this.texts.length > 25 && !options.isCrit) {
+      return;
+    }
     this.texts.push(new FloatingText(x, y, text, color, options));
   }
 
   addShockwave(x, y, radius, color = '#00f0ff', duration = 0.4, lineWidth = 3) {
+    if (this.shockwaves.length > 10) return;
     this.shockwaves.push(new Shockwave(x, y, radius, color, duration, lineWidth));
   }
 
   emitExplosion(x, y, color = '#ff5500', count = 18, radius = 55) {
     this.addShockwave(x, y, radius, color, 0.35, 4);
-    for (let i = 0; i < count; i++) {
+    // Throttle particles if at 5x or 8x speed
+    let actualCount = count;
+    if (this.gameSpeed >= 8.0) actualCount = Math.max(4, Math.round(count * 0.35));
+    else if (this.gameSpeed >= 5.0) actualCount = Math.max(6, Math.round(count * 0.55));
+
+    if (this.particles.length > 90) actualCount = Math.min(actualCount, 4);
+
+    for (let i = 0; i < actualCount; i++) {
       this.particles.push(new Particle(x, y, color, {
         speed: Math.random() * 160 + 40,
         size: Math.random() * 4 + 2,
-        life: Math.random() * 0.4 + 0.3,
+        life: Math.random() * 0.35 + 0.25,
         shape: Math.random() > 0.4 ? 'square' : 'circle'
       }));
     }
   }
 
   emitSparks(x, y, color = '#00f0ff', count = 8, speed = 80) {
-    for (let i = 0; i < count; i++) {
+    // If pool is near budget or high speed, throttle heavily
+    if (this.particles.length > 80) return;
+    let actualCount = count;
+    if (this.gameSpeed >= 8.0) actualCount = Math.max(1, Math.round(count * 0.25));
+    else if (this.gameSpeed >= 5.0) actualCount = Math.max(2, Math.round(count * 0.45));
+
+    for (let i = 0; i < actualCount; i++) {
       this.particles.push(new Particle(x, y, color, {
         speed: Math.random() * speed + 20,
         size: Math.random() * 2.5 + 1.5,
-        life: Math.random() * 0.25 + 0.15
+        life: Math.random() * 0.2 + 0.12
       }));
     }
   }
@@ -211,6 +234,14 @@ export class EffectsManager {
       if (this.texts[i].life <= 0) {
         this.texts.splice(i, 1);
       }
+    }
+
+    // Hard safety caps to avoid GC spikes
+    if (this.particles.length > 100) {
+      this.particles.splice(0, this.particles.length - 100);
+    }
+    if (this.texts.length > 30) {
+      this.texts.splice(0, this.texts.length - 30);
     }
   }
 

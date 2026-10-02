@@ -79,6 +79,7 @@ export class UIManager {
       // Modals
       modalBackdrop: document.getElementById('modal-backdrop'),
       mainMenuModal: document.getElementById('modal-main-menu'),
+      settingsModal: document.getElementById('modal-settings'),
       guideModal: document.getElementById('modal-guide'),
       techModal: document.getElementById('modal-tech'),
       techList: document.getElementById('tech-list'),
@@ -95,6 +96,17 @@ export class UIManager {
       resultGuideBtn: document.getElementById('btn-result-guide'),
       resultSelectBtn: document.getElementById('btn-result-select'),
       resultTechBtn: document.getElementById('btn-result-tech'),
+
+      // Settings Controls
+      settingBgmToggle: document.getElementById('setting-bgm-toggle'),
+      settingBgmSlider: document.getElementById('setting-bgm-slider'),
+      settingBgmVal: document.getElementById('setting-bgm-val'),
+      settingSfxSlider: document.getElementById('setting-sfx-slider'),
+      settingSfxVal: document.getElementById('setting-sfx-val'),
+      settingShakeToggle: document.getElementById('setting-shake-toggle'),
+      settingDmgToggle: document.getElementById('setting-dmg-toggle'),
+      settingAutoToggle: document.getElementById('setting-auto-toggle'),
+      btnBackFromSettings: document.getElementById('btn-back-from-settings'),
 
       // Toast
       toastNotification: document.getElementById('toast-notification')
@@ -250,25 +262,27 @@ export class UIManager {
   }
 
   bindEvents() {
-    // 1. Floating Controls (Speed, Pause, Audio, Guide)
+    // 1. Floating Controls (Speed, Pause, Guide)
+    const SPEEDS = [1.0, 2.0, 3.0, 5.0, 8.0];
     this.dom.speedBtn?.addEventListener('click', () => {
       audio.ensureContext();
-      if (this.game.gameSpeed === 1.0) this.game.gameSpeed = 2.0;
-      else if (this.game.gameSpeed === 2.0) this.game.gameSpeed = 3.0;
-      else this.game.gameSpeed = 1.0;
+      const currentIndex = SPEEDS.indexOf(this.game.gameSpeed);
+      const nextIndex = (currentIndex + 1) % SPEEDS.length;
+      this.game.gameSpeed = SPEEDS[nextIndex];
       this.dom.speedBtn.innerText = `${this.game.gameSpeed}x`;
+
+      this.dom.speedBtn.classList.remove('hyper', 'ultra');
+      if (this.game.gameSpeed === 5.0) {
+        this.dom.speedBtn.classList.add('hyper');
+      } else if (this.game.gameSpeed === 8.0) {
+        this.dom.speedBtn.classList.add('ultra');
+      }
     });
 
     this.dom.pauseBtn?.addEventListener('click', () => {
       audio.ensureContext();
       this.game.isPaused = !this.game.isPaused;
       this.dom.pauseBtn.innerHTML = this.game.isPaused ? ICONS.play : ICONS.pause;
-    });
-
-    this.dom.audioBtn?.addEventListener('click', () => {
-      audio.ensureContext();
-      const isPlaying = audio.toggleBgm();
-      this.dom.audioBtn.innerHTML = isPlaying ? ICONS.audio : ICONS.audioMute;
     });
 
     this.dom.guideQuickBtn?.addEventListener('click', () => {
@@ -317,6 +331,9 @@ export class UIManager {
     document.getElementById('menu-btn-achieve')?.addEventListener('click', () => {
       this.openAchieveModal();
     });
+    document.getElementById('menu-btn-settings')?.addEventListener('click', () => {
+      this.openSettingsModal();
+    });
     document.getElementById('menu-btn-resume')?.addEventListener('click', () => {
       this.closeModals();
     });
@@ -324,6 +341,53 @@ export class UIManager {
       this.closeModals();
       this.game.loadStage(this.game.currentMapId, this.game.isEndless);
     });
+
+    // Settings Modal Events
+    this.dom.btnBackFromSettings?.addEventListener('click', () => {
+      this.openMainMenuModal();
+    });
+
+    this.dom.settingBgmToggle?.addEventListener('change', (e) => {
+      audio.setBgmEnabled(e.target.checked);
+    });
+
+    this.dom.settingBgmSlider?.addEventListener('input', (e) => {
+      const val = parseFloat(e.target.value) / 100;
+      audio.setBgmVolume(val);
+      if (this.dom.settingBgmVal) {
+        this.dom.settingBgmVal.innerText = `${e.target.value}%`;
+      }
+    });
+
+    this.dom.settingSfxSlider?.addEventListener('input', (e) => {
+      const val = parseFloat(e.target.value) / 100;
+      audio.setSfxVolume(val);
+      if (this.dom.settingSfxVal) {
+        this.dom.settingSfxVal.innerText = `${e.target.value}%`;
+      }
+    });
+
+    this.dom.settingSfxSlider?.addEventListener('change', () => {
+      audio.ensureContext();
+      audio.playHit();
+    });
+
+    this.dom.settingShakeToggle?.addEventListener('change', (e) => {
+      state.data.settings.screenShake = e.target.checked;
+      state.save();
+    });
+
+    this.dom.settingDmgToggle?.addEventListener('change', (e) => {
+      state.data.settings.damageNumbers = e.target.checked;
+      state.save();
+    });
+
+    this.dom.settingAutoToggle?.addEventListener('change', (e) => {
+      state.data.settings.autoWave = e.target.checked;
+      state.save();
+    });
+
+    this.syncSettingsUI();
 
     // 6. Modal Close Buttons
     document.querySelectorAll('.btn-close-modal').forEach((btn) => {
@@ -596,6 +660,7 @@ export class UIManager {
   closeModals() {
     this.dom.modalBackdrop?.classList.add('hidden');
     this.dom.mainMenuModal?.classList.add('hidden');
+    this.dom.settingsModal?.classList.add('hidden');
     this.dom.guideModal?.classList.add('hidden');
     this.dom.techModal?.classList.add('hidden');
     this.dom.achieveModal?.classList.add('hidden');
@@ -607,16 +672,57 @@ export class UIManager {
     audio.ensureContext();
     this.dom.modalBackdrop?.classList.remove('hidden');
     this.dom.mainMenuModal?.classList.remove('hidden');
+    this.dom.settingsModal?.classList.add('hidden');
     this.dom.guideModal?.classList.add('hidden');
     this.dom.techModal?.classList.add('hidden');
     this.dom.stageModal?.classList.add('hidden');
     this.dom.achieveModal?.classList.add('hidden');
   }
 
+  openSettingsModal() {
+    audio.ensureContext();
+    this.dom.modalBackdrop?.classList.remove('hidden');
+    this.dom.mainMenuModal?.classList.add('hidden');
+    this.dom.settingsModal?.classList.remove('hidden');
+    this.dom.guideModal?.classList.add('hidden');
+    this.dom.techModal?.classList.add('hidden');
+    this.dom.stageModal?.classList.add('hidden');
+    this.dom.achieveModal?.classList.add('hidden');
+    this.syncSettingsUI();
+  }
+
+  syncSettingsUI() {
+    const s = state.data.settings;
+    if (!s) return;
+    if (this.dom.settingBgmToggle) {
+      this.dom.settingBgmToggle.checked = s.bgmEnabled !== false;
+    }
+    if (this.dom.settingBgmSlider) {
+      const bgmPct = Math.round((s.bgmVolume ?? 0.4) * 100);
+      this.dom.settingBgmSlider.value = bgmPct;
+      if (this.dom.settingBgmVal) this.dom.settingBgmVal.innerText = `${bgmPct}%`;
+    }
+    if (this.dom.settingSfxSlider) {
+      const sfxPct = Math.round((s.sfxVolume ?? 0.6) * 100);
+      this.dom.settingSfxSlider.value = sfxPct;
+      if (this.dom.settingSfxVal) this.dom.settingSfxVal.innerText = `${sfxPct}%`;
+    }
+    if (this.dom.settingShakeToggle) {
+      this.dom.settingShakeToggle.checked = !!s.screenShake;
+    }
+    if (this.dom.settingDmgToggle) {
+      this.dom.settingDmgToggle.checked = !!s.damageNumbers;
+    }
+    if (this.dom.settingAutoToggle) {
+      this.dom.settingAutoToggle.checked = !!s.autoWave;
+    }
+  }
+
   openGuideModal() {
     audio.ensureContext();
     this.dom.modalBackdrop?.classList.remove('hidden');
     this.dom.mainMenuModal?.classList.add('hidden');
+    this.dom.settingsModal?.classList.add('hidden');
     this.dom.guideModal?.classList.remove('hidden');
     this.renderTacticalGuide();
   }
@@ -778,6 +884,7 @@ export class UIManager {
     audio.ensureContext();
     this.dom.modalBackdrop?.classList.remove('hidden');
     this.dom.mainMenuModal?.classList.add('hidden');
+    this.dom.settingsModal?.classList.add('hidden');
     this.dom.techModal?.classList.remove('hidden');
     if (this.dom.techCoresDisplay) {
       this.dom.techCoresDisplay.innerText = state.data.quantumCores;
@@ -828,6 +935,7 @@ export class UIManager {
     audio.ensureContext();
     this.dom.modalBackdrop?.classList.remove('hidden');
     this.dom.mainMenuModal?.classList.add('hidden');
+    this.dom.settingsModal?.classList.add('hidden');
     this.dom.achieveModal?.classList.remove('hidden');
     this.renderAchievements();
   }
@@ -858,6 +966,7 @@ export class UIManager {
     audio.ensureContext();
     this.dom.modalBackdrop?.classList.remove('hidden');
     this.dom.mainMenuModal?.classList.add('hidden');
+    this.dom.settingsModal?.classList.add('hidden');
     this.dom.stageModal?.classList.remove('hidden');
     this.renderStages();
   }

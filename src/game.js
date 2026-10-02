@@ -443,9 +443,30 @@ export class GameEngine {
   update(dt) {
     if (this.isPaused || this.isGameOver || this.isVictory) return;
 
-    // Apply Game Speed
-    const effectiveDt = dt * this.gameSpeed;
+    // Synchronize gameSpeed with effects manager for particle throttling
+    effects.gameSpeed = this.gameSpeed;
 
+    const totalDt = dt * this.gameSpeed;
+
+    // Capped Sub-stepping:
+    // 1x, 2x, 3x: 1 step
+    // 5x: 2 steps
+    // 8x: 3 steps
+    // Prevents tunneling and projectile misses without 8x CPU calculation explosion!
+    const steps = this.gameSpeed >= 8.0 ? 3 : (this.gameSpeed >= 5.0 ? 2 : 1);
+    const subDt = totalDt / steps;
+
+    for (let s = 0; s < steps; s++) {
+      this.stepSimulation(subDt);
+      if (this.isGameOver || this.isVictory) break;
+    }
+
+    // Heavy visual updates (particles, floating text decay, UI sync) execute ONCE per animation frame
+    effects.update(totalDt);
+    this.notifyUI();
+  }
+
+  stepSimulation(effectiveDt) {
     // Map pulse & visual updates
     this.map.update(effectiveDt);
 
@@ -563,11 +584,6 @@ export class GameEngine {
     if (newProjectiles.length > 0) {
       this.projectiles.push(...newProjectiles);
     }
-
-    // 5. Update Effects
-    effects.update(effectiveDt);
-
-    this.notifyUI();
   }
 
   onWaveCleared() {
