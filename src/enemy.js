@@ -13,8 +13,15 @@ export class Enemy {
     this.def = def;
     this.pathIndex = pathIndex;
 
-    // Scaling by wave
-    const waveHpMult = Math.pow(1.085, wave - 1);
+    // Scaling by wave: exponential curve for campaign (<=30), smooth progressive curve for endless mode (>30)
+    let waveHpMult = 1.0;
+    if (wave <= 30) {
+      waveHpMult = Math.pow(1.08, wave - 1);
+    } else {
+      const base30 = Math.pow(1.08, 29); // ~9.317 at wave 30
+      const extra = wave - 30;
+      waveHpMult = base30 * (1 + extra * 0.10 + Math.pow(extra, 1.22) * 0.02);
+    }
     this.maxHp = Math.round(def.hp * waveHpMult);
     this.hp = this.maxHp;
 

@@ -31,6 +31,16 @@ export class UIManager {
       audioBtn: document.getElementById('btn-audio'),
       guideQuickBtn: document.getElementById('btn-open-guide-quick'),
 
+      // Boss Encounter Global Health Bar
+      bossHudBar: document.getElementById('boss-hud-bar'),
+      bossHudName: document.getElementById('boss-hud-name'),
+      bossHudStatusTags: document.getElementById('boss-hud-status-tags'),
+      bossShieldTrack: document.getElementById('boss-shield-track'),
+      bossShieldFill: document.getElementById('boss-shield-fill'),
+      bossShieldText: document.getElementById('boss-shield-text'),
+      bossHpFill: document.getElementById('boss-hp-fill'),
+      bossHpText: document.getElementById('boss-hp-text'),
+
       // Bottom control area
       towerShop: document.getElementById('tower-shop'),
       towerPreviewCard: document.getElementById('tower-preview-card'),
@@ -457,6 +467,51 @@ export class UIManager {
     } else {
       this.dom.towerInspector?.classList.add('hidden');
       this.dom.towerShop?.classList.remove('hidden');
+    }
+
+    // Boss Encounter Global Health Bar Update
+    const activeBoss = this.game.enemies?.find((e) => e.isBoss && !e.dead);
+    if (activeBoss && this.dom.bossHudBar) {
+      this.dom.bossHudBar.classList.remove('hidden');
+      if (this.dom.bossHudName) {
+        this.dom.bossHudName.innerText = activeBoss.def?.name || 'BOSS ENCOUNTER';
+      }
+
+      // HP Bar
+      const hpRatio = Math.max(0, Math.min(1, activeBoss.hp / activeBoss.maxHp));
+      if (this.dom.bossHpFill) {
+        this.dom.bossHpFill.style.width = `${(hpRatio * 100).toFixed(1)}%`;
+      }
+      if (this.dom.bossHpText) {
+        this.dom.bossHpText.innerText = `${Math.ceil(activeBoss.hp).toLocaleString()} / ${activeBoss.maxHp.toLocaleString()} (${(hpRatio * 100).toFixed(0)}%)`;
+      }
+
+      // Shield Bar
+      if (activeBoss.maxShield && activeBoss.maxShield > 0) {
+        this.dom.bossShieldTrack?.classList.remove('hidden');
+        const sRatio = Math.max(0, Math.min(1, activeBoss.shield / activeBoss.maxShield));
+        if (this.dom.bossShieldFill) {
+          this.dom.bossShieldFill.style.width = `${(sRatio * 100).toFixed(1)}%`;
+        }
+        if (this.dom.bossShieldText) {
+          this.dom.bossShieldText.innerText = `SHIELD: ${Math.ceil(activeBoss.shield).toLocaleString()} / ${activeBoss.maxShield.toLocaleString()} (${(sRatio * 100).toFixed(0)}%)`;
+        }
+      } else {
+        this.dom.bossShieldTrack?.classList.add('hidden');
+      }
+
+      // Status tags
+      if (this.dom.bossHudStatusTags) {
+        const tags = [];
+        if (activeBoss.freezeTimer > 0) tags.push('<span class="boss-tag tag-freeze">FROZEN</span>');
+        else if (activeBoss.slowTimer > 0) tags.push(`<span class="boss-tag tag-slow">SLOW -${Math.round(activeBoss.slowFactor * 100)}%</span>`);
+        if (activeBoss.stunTimer > 0) tags.push('<span class="boss-tag tag-stun">STUNNED</span>');
+        if (activeBoss.armorShred > 0) tags.push(`<span class="boss-tag tag-shred">SHRED -${Math.round(activeBoss.armorShred * 100)}%</span>`);
+        if (activeBoss.burnTimer > 0) tags.push('<span class="boss-tag tag-burn">BURNING</span>');
+        this.dom.bossHudStatusTags.innerHTML = tags.join('');
+      }
+    } else if (this.dom.bossHudBar) {
+      this.dom.bossHudBar.classList.add('hidden');
     }
   }
 

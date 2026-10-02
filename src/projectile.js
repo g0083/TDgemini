@@ -138,7 +138,9 @@ export class Projectile {
       enemy.applyArmorShred(this.shredArmor);
     }
     if (this.knockback > 0) {
-      enemy.distance = Math.max(0, enemy.distance - this.knockback * 0.05);
+      // Bosses have 85% knockback resistance so rapid fire cannot pin them at spawn
+      const kbFactor = enemy.isBoss ? 0.15 : 1.0;
+      enemy.distance = Math.max(0, enemy.distance - this.knockback * 0.05 * kbFactor);
     }
 
     effects.emitSparks(this.x, this.y, this.color, 4, 60);

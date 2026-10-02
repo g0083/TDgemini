@@ -28,12 +28,6 @@
     <!-- Top HUD Bar: Minimalist & 1-Row Responsive (No Horizontal Scroll) -->
     <header id="hud-header">
       <div class="hud-group left">
-        <div class="hud-item hp-pill" title="拠点コア残耐久">
-          <span class="hud-icon">
-            <svg class="icon icon-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          </span>
-          <span id="hud-hp" class="hud-val">20</span><span class="hud-slash">/</span><span id="hud-hp-max" class="hud-max">20</span>
-        </div>
         <div class="hud-item gold-pill" title="所持クレジット">
           <span class="hud-icon">
             <svg class="icon icon-gold" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M14.5 9.5a2.5 2.5 0 0 0-2.5-2H10a2.5 2.5 0 0 0 0 5h4a2.5 2.5 0 0 1 0 5h-2.5a2.5 2.5 0 0 1-2.5-2"/><path d="M12 5.5v2m0 9v2"/></svg>
@@ -85,6 +79,29 @@
           <svg class="icon icon-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
         </button>
       </div>
+
+      <!-- Boss Encounter Global Health Bar (Prominent bar in empty space below map) -->
+      <div id="boss-hud-bar" class="boss-hud-bar hidden">
+        <div class="boss-hud-header">
+          <div class="boss-hud-name-box">
+            <span class="boss-hud-alert-badge">BOSS ALERT</span>
+            <span id="boss-hud-name" class="boss-hud-name">クォンタム オーバーロード</span>
+          </div>
+          <div id="boss-hud-status-tags" class="boss-hud-status-tags"></div>
+        </div>
+        <div class="boss-hud-bars">
+          <!-- Boss Shield Bar (Visible if shield > 0) -->
+          <div id="boss-shield-track" class="boss-track boss-shield-track hidden">
+            <div id="boss-shield-fill" class="boss-fill boss-shield-fill"></div>
+            <span id="boss-shield-text" class="boss-track-text">SHIELD 3,500 / 3,500</span>
+          </div>
+          <!-- Boss HP Bar -->
+          <div class="boss-track boss-hp-track">
+            <div id="boss-hp-fill" class="boss-fill boss-hp-fill"></div>
+            <span id="boss-hp-text" class="boss-track-text">11,000 / 11,000 (100%)</span>
+          </div>
+        </div>
+      </div>
     </main>
 
     <!-- Bottom Controls & Mobile Touch Bar -->
@@ -98,54 +115,57 @@
         </span>
       </button>
 
-      <!-- Skills Bar -->
-      <div id="skills-bar" class="skills-strip">
-        <!-- Dynamically populated skills -->
-      </div>
+      <!-- Skills Bar & Tower Preview Overlay Deck (Overlays skills bar so map is not pushed into header) -->
+      <div class="skills-overlay-deck">
+        <!-- Skills Bar -->
+        <div id="skills-bar" class="skills-strip">
+          <!-- Dynamically populated skills -->
+        </div>
 
-      <!-- Tower Pre-Purchase Tactical Preview Card (Shown when a tower is tapped in shop) -->
-      <div id="tower-preview-card" class="tower-preview-card hidden">
-        <div class="prev-header">
-          <div class="prev-title-box">
-            <span id="prev-icon" class="prev-icon">
-              <svg class="icon" viewBox="0 0 24 24"><polygon points="12 2 4 22 20 22"/><line x1="8" y1="14" x2="16" y2="14"/><line x1="10" y1="8" x2="14" y2="8"/></svg>
-            </span>
-            <div>
-              <span id="prev-name" class="prev-name">パルス砲</span>
-              <span id="prev-role" class="prev-role-badge">万能・先鋒</span>
+        <!-- Tower Pre-Purchase Tactical Preview Card (Overlays skills bar) -->
+        <div id="tower-preview-card" class="tower-preview-card hidden">
+          <div class="prev-header">
+            <div class="prev-title-box">
+              <span id="prev-icon" class="prev-icon">
+                <svg class="icon" viewBox="0 0 24 24"><polygon points="12 2 4 22 20 22"/><line x1="8" y1="14" x2="16" y2="14"/><line x1="10" y1="8" x2="14" y2="8"/></svg>
+              </span>
+              <div>
+                <span id="prev-name" class="prev-name">パルス砲</span>
+                <span id="prev-role" class="prev-role-badge">万能・先鋒</span>
+              </div>
+            </div>
+            <button id="btn-close-preview" class="prev-close-btn" title="閉じる">
+              <svg class="icon icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <p id="prev-desc" class="prev-desc">標準的な連射エネルギー砲。低コストで信頼性が高い。</p>
+          <div class="prev-pros-cons">
+            <div class="pros-item"><strong>得意:</strong> <span id="prev-strengths">小型・標準敵</span></div>
+            <div class="cons-item"><strong>苦手:</strong> <span id="prev-weaknesses">重装甲・ボス</span></div>
+          </div>
+          <div class="prev-stats-row">
+            <div class="stat-pill">
+              <svg class="icon icon-damage" viewBox="0 0 24 24"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/><path d="M16 16l4 4"/><path d="M19 21l2-2"/></svg>
+              <span>威力:</span> <span id="prev-stat-dmg">26</span>
+            </div>
+            <div class="stat-pill">
+              <svg class="icon icon-rate" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              <span>速度:</span> <span id="prev-stat-rate">1.8/s</span>
+            </div>
+            <div class="stat-pill">
+              <svg class="icon icon-range" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 3v9l6.36-6.36"/></svg>
+              <span>射程:</span> <span id="prev-stat-range">135</span>
             </div>
           </div>
-          <button id="btn-close-preview" class="prev-close-btn">
-            <svg class="icon icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </button>
-        </div>
-        <p id="prev-desc" class="prev-desc">標準的な連射エネルギー砲。低コストで信頼性が高い。</p>
-        <div class="prev-pros-cons">
-          <div class="pros-item"><strong>得意:</strong> <span id="prev-strengths">小型・標準敵</span></div>
-          <div class="cons-item"><strong>苦手:</strong> <span id="prev-weaknesses">重装甲・ボス</span></div>
-        </div>
-        <div class="prev-stats-row">
-          <div class="stat-pill">
-            <svg class="icon icon-damage" viewBox="0 0 24 24"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/><path d="M16 16l4 4"/><path d="M19 21l2-2"/></svg>
-            <span>威力:</span> <span id="prev-stat-dmg">26</span>
+          <div class="prev-action-row">
+            <button id="btn-confirm-build" class="btn-confirm-build">
+              <span>マップ上の枠をタップして配置</span>
+              <strong id="prev-cost-text">
+                <svg class="icon icon-gold" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M14.5 9.5a2.5 2.5 0 0 0-2.5-2H10a2.5 2.5 0 0 0 0 5h4a2.5 2.5 0 0 1 0 5h-2.5a2.5 2.5 0 0 1-2.5-2"/><path d="M12 5.5v2m0 9v2"/></svg>
+                100
+              </strong>
+            </button>
           </div>
-          <div class="stat-pill">
-            <svg class="icon icon-rate" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-            <span>速度:</span> <span id="prev-stat-rate">1.8/s</span>
-          </div>
-          <div class="stat-pill">
-            <svg class="icon icon-range" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 3v9l6.36-6.36"/></svg>
-            <span>射程:</span> <span id="prev-stat-range">135</span>
-          </div>
-        </div>
-        <div class="prev-action-row">
-          <button id="btn-confirm-build" class="btn-confirm-build">
-            <span>マップ上の枠をタップして配置</span>
-            <strong id="prev-cost-text">
-              <svg class="icon icon-gold" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M14.5 9.5a2.5 2.5 0 0 0-2.5-2H10a2.5 2.5 0 0 0 0 5h4a2.5 2.5 0 0 1 0 5h-2.5a2.5 2.5 0 0 1-2.5-2"/><path d="M12 5.5v2m0 9v2"/></svg>
-              100
-            </strong>
-          </button>
         </div>
       </div>
 
