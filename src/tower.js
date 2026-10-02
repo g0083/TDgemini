@@ -44,8 +44,24 @@ export class Tower {
     // Visual recoil & animation
     this.recoil = 0;
     this.pulseAngle = 0;
+    this.protocols = [];
+    this.spoolBonus = 0;
+
+    // Disabled / EMP / Hack status
+    this.disabledTimer = 0;
+    this.maxDisabledDuration = 0;
+    this.disabledReason = 'OFFLINE';
 
     this.recalculateStats();
+  }
+
+  disable(duration, reason = 'OFFLINE') {
+    this.disabledTimer = Math.max(this.disabledTimer, duration);
+    this.maxDisabledDuration = Math.max(this.maxDisabledDuration, duration);
+    this.disabledReason = reason;
+    effects.emitSparks(this.x, this.y, '#ff0055', 10, 45);
+    effects.addText(this.x, this.y - 18, reason, '#ff0055', { isCrit: true, size: 13 });
+    audio.playSkill('emp');
   }
 
   recalculateStats() {
@@ -65,10 +81,17 @@ export class Tower {
       if (u.fireRate) baseRate = u.fireRate;
       if (u.range) baseRange = u.range;
     } else if (this.level >= 4 && this.evolvedPath && this.def.paths?.[this.evolvedPath]) {
+      // Inherit Mk-III stats as baseline so fireRate/range enhancements are preserved
+      const u = this.def.upgrades?.[1];
+      if (u) {
+        if (u.damage) baseDmg = u.damage;
+        if (u.fireRate) baseRate = u.fireRate;
+        if (u.range) baseRange = u.range;
+      }
       const p = this.def.paths[this.evolvedPath];
-      if (p.damage) baseDmg = p.damage;
-      if (p.fireRate) baseRate = p.fireRate;
-      if (p.range) baseRange = p.range;
+      if (p.damage !== undefined) baseDmg = p.damage;
+      if (p.fireRate !== undefined) baseRate = p.fireRate;
+      if (p.range !== undefined) baseRange = p.range;
     }
 
     // Apply Tech Tree Research Multipliers
@@ -76,10 +99,30 @@ export class Tower {
     const techRate = state.getTechMultiplier('fire_rate');
     const techRange = state.getTechMultiplier('tower_range');
 
-    this.effectiveDamage = baseDmg * (1 + techDmg + this.buffDamage);
-    this.effectiveFireRate = baseRate * (1 + techRate + this.buffRate);
-    this.effectiveRange = baseRange * (1 + techRange + this.buffRange) * (this.mapScale || 1.0);
-    this.critChance = (this.evolvedData?.critChance || 0) + state.getTechMultiplier('crit_matrix') + this.buffCrit;
+    // Apply Tower Mastery Bonuses (Permanent)
+    const mastery = state.getTowerMastery(this.typeId);
+    const mBonus = mastery.bonus || {};
+
+    // Apply Tactical Protocol Bonuses
+    let protoDmg = 0;
+    let protoRate = 0;
+    let protoRange = 0;
+    let protoCrit = 0;
+    if (this.protocols) {
+      for (const p of this.protocols) {
+        if (p.statBonus) {
+          if (p.statBonus.damage) protoDmg += p.statBonus.damage;
+          if (p.statBonus.fireRate) protoRate += p.statBonus.fireRate;
+          if (p.statBonus.range) protoRange += p.statBonus.range;
+          if (p.statBonus.critChance) protoCrit += p.statBonus.critChance;
+        }
+      }
+    }
+
+    this.effectiveDamage = baseDmg * (1 + techDmg + (mBonus.damage || 0) + protoDmg + this.buffDamage);
+    this.effectiveFireRate = baseRate * (1 + techRate + (mBonus.fireRate || 0) + protoRate + (this.spoolBonus || 0) + this.buffRate);
+    this.effectiveRange = baseRange * (1 + techRange + (mBonus.range || 0) + protoRange + this.buffRange) * (this.mapScale || 1.0);
+    this.critChance = (this.evolvedData?.critChance || 0) + state.getTechMultiplier('crit_matrix') + (mBonus.critChance || 0) + protoCrit + this.buffCrit;
   }
 
   get evolvedData() {
@@ -98,18 +141,29 @@ export class Tower {
     return this.def.name;
   }
 
+  getCostDiscount() {
+    const mastery = state.getTowerMastery(this.typeId);
+    return mastery.bonus?.costReduction || 0;
+  }
+
   getUpgradeCost() {
-    if (this.level === 1) return this.def.upgrades[0].cost;
-    if (this.level === 2) return this.def.upgrades[1].cost;
+    let cost = null;
+    if (this.level === 1) cost = this.def.upgrades[0].cost;
+    else if (this.level === 2) cost = this.def.upgrades[1].cost;
+    if (cost !== null) {
+      return Math.round(cost * (1 - this.getCostDiscount()));
+    }
     return null;
   }
 
   getPathACost() {
-    return this.def.paths?.pathA?.cost || 0;
+    const base = this.def.paths?.pathA?.cost || 0;
+    return Math.round(base * (1 - this.getCostDiscount()));
   }
 
   getPathBCost() {
-    return this.def.paths?.pathB?.cost || 0;
+    const base = this.def.paths?.pathB?.cost || 0;
+    return Math.round(base * (1 - this.getCostDiscount()));
   }
 
   upgradeLevel() {
@@ -183,10 +237,11 @@ export class Tower {
     }
   }
 
-  update(dt, enemies, newProjectiles, overchargeActive = false, mapScale = null) {
+  update(dt, enemies, newProjectiles, overchargeActive = false, mapScale = null, protocols = []) {
     if (mapScale && mapScale !== this.mapScale) {
       this.mapScale = mapScale;
     }
+    this.protocols = protocols || [];
     this.recalculateStats();
 
     // Recoil recovery
@@ -194,6 +249,38 @@ export class Tower {
       this.recoil = Math.max(0, this.recoil - dt * 15);
     }
     this.pulseAngle += dt * 3;
+
+    // Decay spool bonus if not attacking
+    if (this.spoolBonus > 0 && !this.currentTarget) {
+      this.spoolBonus = Math.max(0, this.spoolBonus - dt * 0.1);
+    }
+
+    // Handle Overcharge skill instant recovery
+    if (overchargeActive && this.disabledTimer > 0) {
+      this.disabledTimer = 0;
+      this.maxDisabledDuration = 0;
+      effects.addText(this.x, this.y - 18, 'OVERCHARGED PURGE!', '#00f0ff', { isCrit: true });
+    }
+
+    // Check disabled / hacked state
+    if (this.disabledTimer > 0) {
+      this.disabledTimer -= dt;
+      if (this.disabledTimer <= 0) {
+        this.disabledTimer = 0;
+        this.maxDisabledDuration = 0;
+        effects.addText(this.x, this.y - 16, 'SYSTEM ONLINE', '#00ff9d', { isCrit: false, size: 12 });
+        effects.emitSparks(this.x, this.y, '#00ff9d', 6, 35);
+        audio.playUpgrade();
+      } else {
+        if (Math.random() < 0.18) {
+          effects.emitSparks(this.x, this.y, '#ff00aa', 2, 20);
+        }
+        this.currentTarget = null;
+        this.multiTargets = [];
+        this.laserChargeTime = 0;
+        return; // Offline: cannot acquire target or fire
+      }
+    }
 
     // Booster tower does not shoot directly
     if (this.def.type === 'booster') return;
@@ -218,7 +305,11 @@ export class Tower {
 
         for (const target of this.multiTargets) {
           if (!target.dead) {
-            target.takeDamage(currentTickDmg, 'pierce');
+            const wasDead = target.dead;
+            target.takeDamage(currentTickDmg, 'pierce', false, this.protocols);
+            if (!wasDead && target.dead) {
+              state.recordTowerKill(this.typeId);
+            }
             if (Math.random() < 0.3) {
               effects.emitSparks(target.x, target.y, this.def.color, 1, 40);
             }
@@ -247,12 +338,21 @@ export class Tower {
     this.angle = Math.atan2(this.currentTarget.y - this.y, this.currentTarget.x - this.x);
     this.recoil = 6;
 
+    // Rapid spool stacking protocol
+    if (this.protocols?.some((p) => p.id === 'rapid_spool')) {
+      this.spoolBonus = Math.min(0.45, (this.spoolBonus || 0) + 0.015);
+    }
+
     const isCrit = Math.random() < this.critChance;
+    const critDevastationTech = state.getTechMultiplier('crit_devastation');
+    const critMultiplier = 2.0 * (1 + critDevastationTech);
+
     let finalDmg = this.effectiveDamage;
-    if (isCrit) finalDmg *= 2.0;
+    if (isCrit) finalDmg *= critMultiplier;
 
     const color = this.evolvedData?.color || this.def.color;
     const scale = this.mapScale || 1.0;
+    const hasKineticShock = this.protocols?.some((p) => p.id === 'kinetic_shock');
 
     // --- Tower Specific Weapon Logic ---
     switch (this.def.type) {
@@ -273,6 +373,8 @@ export class Tower {
             damageType: 'pierce',
             color: '#76ff03',
             isCrit,
+            sourceTowerType: this.typeId,
+            protocols: this.protocols,
             mapScale: scale
           }));
         } else {
@@ -293,6 +395,8 @@ export class Tower {
             damageType: 'pierce',
             color,
             isCrit,
+            sourceTowerType: this.typeId,
+            protocols: this.protocols,
             mapScale: scale
           }));
         }
@@ -302,6 +406,7 @@ export class Tower {
       case 'splash': {
         // Cannon / Mortar
         audio.playShoot('cannon');
+        const projSpeed = (400 * (hasKineticShock ? 1.3 : 1.0)) * scale;
         newProjectiles.push(new Projectile({
           x: this.x,
           y: this.y,
@@ -310,11 +415,13 @@ export class Tower {
           splashRadius: (this.evolvedData?.splashRadius || this.def.splashRadius || 60) * scale,
           clusterCount: this.evolvedData?.clusterCount || 0,
           burnDuration: this.evolvedData?.burnDuration || 0,
-          speed: 400 * scale,
+          speed: projSpeed,
           color,
           isArc: true,
           damageType: 'explosive',
           isCrit,
+          sourceTowerType: this.typeId,
+          protocols: this.protocols,
           mapScale: scale
         }));
         break;
@@ -333,6 +440,8 @@ export class Tower {
           slowAmount: this.evolvedData?.slowAmount || this.def.slowAmount,
           slowDuration: this.def.slowDuration || 2.5,
           isCrit,
+          sourceTowerType: this.typeId,
+          protocols: this.protocols,
           mapScale: scale
         }));
 
@@ -346,7 +455,8 @@ export class Tower {
       case 'chain': {
         // Tesla Chain Arc
         audio.playShoot('tesla');
-        const chainCount = this.evolvedData?.chainCount || this.def.chainCount || 3;
+        const hasTeslaStorm = this.protocols?.some((p) => p.id === 'tesla_storm');
+        const chainCount = (this.evolvedData?.chainCount || this.def.chainCount || 3) + (hasTeslaStorm ? 3 : 0);
         const chainRange = (this.evolvedData?.chainRange || this.def.chainRange || 80) * scale;
         const stunDuration = this.evolvedData?.stunDuration || 0;
 
@@ -356,7 +466,11 @@ export class Tower {
 
         for (let i = 0; i < chainCount && curTarget; i++) {
           hitSet.add(curTarget.id);
-          curTarget.takeDamage(finalDmg * Math.pow(0.85, i), 'electric', isCrit);
+          const wasDead = curTarget.dead;
+          curTarget.takeDamage(finalDmg * Math.pow(0.85, i), 'electric', isCrit, this.protocols);
+          if (!wasDead && curTarget.dead) {
+            state.recordTowerKill(this.typeId);
+          }
 
           if (stunDuration > 0) {
             curTarget.applyStun(stunDuration);
@@ -387,16 +501,21 @@ export class Tower {
       default: {
         // Pulse & Gatling
         audio.playShoot(this.typeId);
+        const baseSpeed = (this.def.bulletSpeed || 550) * (hasKineticShock ? 1.3 : 1.0);
+        const knockbackVal = (this.evolvedData?.knockback || 0) + (hasKineticShock ? 14 : 0);
+
         newProjectiles.push(new Projectile({
           x: this.x,
           y: this.y,
           target: this.currentTarget,
           damage: finalDmg,
-          speed: (this.def.bulletSpeed || 550) * scale,
+          speed: baseSpeed * scale,
           color,
           shredArmor: this.evolvedData?.shredArmor || 0,
-          knockback: this.evolvedData?.knockback || 0,
+          knockback: knockbackVal,
           isCrit,
+          sourceTowerType: this.typeId,
+          protocols: this.protocols,
           mapScale: scale
         }));
         break;
@@ -1043,6 +1162,40 @@ export class Tower {
       ctx.textAlign = 'center';
       const label = this.level === 4 ? (this.evolvedPath === 'pathA' ? 'EX-A' : 'EX-B') : `Lv${this.level}`;
       ctx.fillText(label, 0, -22);
+      ctx.restore();
+    }
+
+    // 7. Disabled / Hacked Visual Overlay
+    if (this.disabledTimer > 0) {
+      ctx.save();
+      const hackPulse = Math.sin(this.pulseAngle * 8) * 0.5 + 0.5;
+      ctx.strokeStyle = `rgba(255, 0, 85, ${0.4 + hackPulse * 0.5})`;
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([4, 4]);
+      ctx.lineDashOffset = -this.pulseAngle * 12;
+      ctx.beginPath();
+      ctx.arc(0, 0, 22, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // EMP offline badge text
+      ctx.fillStyle = '#ff0055';
+      ctx.font = 'bold 9px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(this.disabledReason || 'OFFLINE', 0, -28);
+
+      // Recovery Progress Bar
+      const totalDur = this.maxDisabledDuration || 1;
+      const progressRatio = Math.max(0, Math.min(1, this.disabledTimer / totalDur));
+      const barW = 28;
+      const barH = 4;
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+      ctx.fillRect(-barW / 2, -25, barW, barH);
+      ctx.fillStyle = '#ff0055';
+      ctx.fillRect(-barW / 2, -25, barW * progressRatio, barH);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([]);
+      ctx.strokeRect(-barW / 2, -25, barW, barH);
       ctx.restore();
     }
 

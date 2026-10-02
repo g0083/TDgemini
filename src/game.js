@@ -1,7 +1,7 @@
 // ==========================================
 // CORE GAME ENGINE & WAVE MANAGER
 // ==========================================
-import { MAPS, SKILLS, ENEMY_TYPES, TOWER_TYPES } from './constants.js';
+import { MAPS, SKILLS, ENEMY_TYPES, TOWER_TYPES, DIFFICULTIES, MODIFIERS, PROTOCOLS } from './constants.js';
 import { GameMap } from './map.js';
 import { Tower } from './tower.js';
 import { Enemy } from './enemy.js';
@@ -16,6 +16,12 @@ export class GameEngine {
 
     this.currentMapId = 'nexus_prime';
     this.isEndless = false;
+    this.difficulty = 'NORMAL';
+    this.activeModifiers = [];
+    this.activeProtocols = [];
+    this.protocolRerollsLeft = 0;
+    this.emergencyBarrierUsed = false;
+    this.score = 0;
     this.map = null;
 
     // Entities
@@ -31,7 +37,7 @@ export class GameEngine {
     this.maxWaves = 30;
     this.isFlawless = true;
 
-    this.waveState = 'INTERMISSION'; // INTERMISSION, SPAWNING, DEFENDING
+    this.waveState = 'INTERMISSION'; // INTERMISSION, SPAWNING, DEFENDING, SELECTING_PROTOCOL
     this.waveTimer = 0;
     this.spawnQueue = [];
     this.spawnInterval = 0;
@@ -62,6 +68,7 @@ export class GameEngine {
     this.onStateChange = null;
     this.onGameOver = null;
     this.onVictory = null;
+    this.onSelectProtocol = null; // (protocols, rerollsLeft) => void
 
     this.viewportWidth = 0;
     this.viewportHeight = 0;
@@ -69,12 +76,72 @@ export class GameEngine {
     this.lastTime = performance.now();
   }
 
-  loadStage(mapId, isEndless = false) {
+  loadStage(mapId, isEndless = false, difficulty = 'NORMAL', activeModifiers = []) {
     this.currentMapId = mapId;
     this.isEndless = isEndless;
-    const mapData = MAPS.find((m) => m.id === mapId) || MAPS[0];
+    this.difficulty = difficulty || 'NORMAL';
+    this.activeModifiers = activeModifiers || [];
+    this.activeProtocols = [];
+    this.protocolRerollsLeft = state.getTechMultiplier('protocol_reroll') || 0;
+    this.emergencyBarrierUsed = false;
+    this.score = 0;
 
+    const mapData = MAPS.find((m) => m.id === mapId) || MAPS[0];
     this.map = new GameMap(mapData);
+
+    // Compute Difficulty and Mutators Scaling Factors
+    const diffDef = DIFFICULTIES[this.difficulty] || DIFFICULTIES.NORMAL;
+    const hasMod = (id) => this.activeModifiers.includes(id);
+
+    let hpMult = diffDef.hpMult;
+    let speedMult = diffDef.speedMult;
+    let rewardMult = diffDef.rewardMult;
+    let scoreMult = diffDef.scoreMult;
+    let coreMult = diffDef.coreMult;
+
+    let shieldBonus = 0;
+    let armorBonus = 0;
+
+    if (hasMod('fast_enemies')) {
+      speedMult *= 1.25;
+      scoreMult += 0.25;
+      coreMult += 0.25;
+    }
+    if (hasMod('hardened_armor')) {
+      armorBonus += 0.15;
+      shieldBonus += 60;
+      scoreMult += 0.30;
+      coreMult += 0.30;
+    }
+    if (hasMod('budget_cut')) {
+      rewardMult *= 0.75;
+      scoreMult += 0.35;
+      coreMult += 0.35;
+    }
+    if (hasMod('no_skills')) {
+      scoreMult += 0.40;
+      coreMult += 0.40;
+    }
+    if (hasMod('swarm_surge')) {
+      scoreMult += 0.45;
+      coreMult += 0.45;
+    }
+    if (hasMod('boss_frenzy')) {
+      scoreMult += 0.50;
+      coreMult += 0.50;
+    }
+
+    this.scaling = {
+      hpMult,
+      speedMult,
+      rewardMult,
+      scoreMult,
+      coreMult,
+      shieldBonus,
+      armorBonus,
+      hasBossFrenzy: hasMod('boss_frenzy'),
+      hasSwarmSurge: hasMod('swarm_surge')
+    };
 
     // Apply viewport dimensions immediately so map is sized and rendered
     if (this.viewportWidth > 0 && this.viewportHeight > 0) {
@@ -257,6 +324,7 @@ export class GameEngine {
     // Apply booster synergies
     for (const b of this.towers) {
       if (b.def.type === 'booster') {
+        if (b.disabledTimer > 0) continue; // Disabled booster cannot provide auras
         const p = b.evolvedData;
         const bDmg = p?.buffDamage || b.def.buffDamage || 0;
         const bRate = p?.buffRate || b.def.buffRate || 0;
@@ -285,6 +353,12 @@ export class GameEngine {
   // --- Commander Skills ---
 
   activateSkill(skillId, targetPos = null) {
+    if (this.activeModifiers.includes('no_skills')) {
+      effects.addText(this.map.width / 2 + this.map.offsetX, 75, '通信途絶: スキル使用不可 (JAMMED)', '#ff2e63', { isCrit: true, size: 16 });
+      audio.playDefeat();
+      return;
+    }
+
     const skill = SKILLS[skillId];
     if (!skill || this.skillCooldowns[skillId] > 0) return;
 
@@ -296,8 +370,11 @@ export class GameEngine {
       return;
     }
 
-    // Cooldown reduction calculation
-    const cdReduction = state.getTechMultiplier('skill_cooldown');
+    // Cooldown reduction calculation (Tech + Orbital Overdrive Protocol)
+    let cdReduction = state.getTechMultiplier('skill_cooldown');
+    if (this.activeProtocols.some((p) => p.id === 'orbital_overdrive')) {
+      cdReduction = Math.min(0.65, cdReduction + 0.25);
+    }
     this.skillCooldowns[skillId] = skill.cooldown * (1 - cdReduction);
     this.activeSkillTargeting = null;
     state.recordSkillUse();
@@ -315,7 +392,7 @@ export class GameEngine {
           if (!enemy.dead) {
             const dist = Math.hypot(enemy.x - targetPos.x, enemy.y - targetPos.y);
             if (dist <= radius) {
-              enemy.takeDamage(skill.damage, 'pierce', true);
+              enemy.takeDamage(skill.damage, 'pierce', true, this.activeProtocols);
             }
           }
         }
@@ -327,9 +404,10 @@ export class GameEngine {
         effects.shake(8, 0.4);
         effects.addShockwave(this.map.width / 2 + this.map.offsetX, this.map.height / 2 + this.map.offsetY, 600, '#b84dff', 0.8, 8);
 
+        const duration = skill.duration + (this.activeProtocols.some((p) => p.id === 'orbital_overdrive') ? 3 : 0);
         for (const enemy of this.enemies) {
           if (!enemy.dead) {
-            enemy.applyStun(skill.duration);
+            enemy.applyStun(duration);
             if (enemy.shield > 0) {
               enemy.shield *= (1 - skill.shieldDamagePercent);
             }
@@ -340,7 +418,8 @@ export class GameEngine {
 
       case 'overcharge': {
         audio.playUpgrade();
-        this.overchargeTimer = skill.duration;
+        const duration = skill.duration + (this.activeProtocols.some((p) => p.id === 'orbital_overdrive') ? 5 : 0);
+        this.overchargeTimer = duration;
         effects.addText(this.map.width / 2 + this.map.offsetX, this.map.height / 2 + this.map.offsetY, 'HYPERDRIVE ENGAGED!', '#ffd000', { isCrit: true, size: 24 });
         break;
       }
@@ -376,13 +455,13 @@ export class GameEngine {
 
     this.waveState = 'SPAWNING';
     this.spawnQueue = this.generateWaveQueue(this.wave);
-    this.spawnInterval = Math.max(0.25, 1.2 - this.wave * 0.02);
+    this.spawnInterval = Math.max(0.20, 1.2 - this.wave * 0.02);
     this.spawnTimer = 0;
 
     // Check boss wave
     const hasBoss = this.spawnQueue.some((item) => ENEMY_TYPES[item.type]?.isBoss);
     if (hasBoss) {
-      effects.shake(10, 0.4);
+      effects.shake(12, 0.4);
       audio.playDefeat(); // ominous alert
     }
 
@@ -403,33 +482,76 @@ export class GameEngine {
       for (let i = 0; i < 8; i++) queue.push({ type: 'scout', path: i % numPaths });
       return queue;
     }
-    if (wave === 30 || (this.isEndless && wave % 15 === 0)) {
+    if (wave === 30) {
       queue.push({ type: 'boss_overlord', path: 0 });
       for (let i = 0; i < 12; i++) queue.push({ type: 'shielded', path: i % numPaths });
       return queue;
     }
 
-    // Standard & Advanced Mix Waves
-    const count = Math.min(60, 8 + Math.floor(wave * 2.2));
+    // Endless Mode Boss Encounters (Wave 40, 50, 60... = Leviathan, others = Overlord / Reaper)
+    if (this.isEndless && wave > 30) {
+      if (wave % 10 === 0) {
+        queue.push({ type: 'boss_leviathan', path: 0 });
+        for (let i = 0; i < 6; i++) queue.push({ type: 'dreadnought', path: i % numPaths });
+        return queue;
+      }
+      if (wave % 5 === 0) {
+        queue.push({ type: wave % 10 === 5 ? 'boss_overlord' : 'boss_reaper', path: 0 });
+        for (let i = 0; i < 8; i++) queue.push({ type: 'kamikaze', path: i % numPaths });
+        return queue;
+      }
+    }
+
+    // Standard & Advanced Mix Waves (with Swarm Surge Mutator support)
+    const baseCount = Math.min(75, 8 + Math.floor(wave * 2.2));
+    const count = this.scaling?.hasSwarmSurge ? Math.round(baseCount * 1.35) : baseCount;
 
     for (let i = 0; i < count; i++) {
       const pathIdx = i % numPaths;
       let enemyType = 'trooper';
 
-      if (wave < 3) {
-        enemyType = Math.random() < 0.7 ? 'scout' : 'trooper';
-      } else if (wave < 7) {
-        const r = Math.random();
-        enemyType = r < 0.4 ? 'scout' : r < 0.75 ? 'trooper' : 'heavy';
-      } else if (wave < 12) {
-        const r = Math.random();
-        enemyType = r < 0.3 ? 'swarm' : r < 0.6 ? 'shielded' : r < 0.85 ? 'splitter' : 'heavy';
-      } else if (wave < 18) {
-        const r = Math.random();
-        enemyType = r < 0.25 ? 'stealth' : r < 0.5 ? 'healer' : r < 0.75 ? 'shielded' : 'splitter';
+      if (!this.isEndless || wave <= 25) {
+        // --- CAMPAIGN & EARLY ENDLESS POOL ---
+        if (wave < 3) {
+          enemyType = Math.random() < 0.7 ? 'scout' : 'trooper';
+        } else if (wave < 7) {
+          const r = Math.random();
+          enemyType = r < 0.4 ? 'scout' : r < 0.75 ? 'trooper' : 'heavy';
+        } else if (wave < 12) {
+          const r = Math.random();
+          enemyType = r < 0.3 ? 'swarm' : r < 0.6 ? 'shielded' : r < 0.85 ? 'splitter' : 'heavy';
+        } else if (wave < 18) {
+          const r = Math.random();
+          enemyType = r < 0.25 ? 'stealth' : r < 0.5 ? 'healer' : r < 0.75 ? 'shielded' : 'splitter';
+        } else {
+          // Late campaign: Introduce occasional Disruptors and Kamikazes for tactical tower threat
+          const r = Math.random();
+          if (r < 0.12) enemyType = 'disruptor';
+          else if (r < 0.24) enemyType = 'kamikaze';
+          else if (r < 0.44) enemyType = 'heavy';
+          else if (r < 0.64) enemyType = 'shielded';
+          else if (r < 0.82) enemyType = 'splitter';
+          else enemyType = 'stealth';
+        }
       } else {
+        // --- ENDLESS MODE EXCLUSIVE DEEP THREAT POOL (Wave 26+) ---
+        // Unleash Warpers, Reflectors, Dreadnoughts, Disruptors, Kamikazes in force!
         const r = Math.random();
-        enemyType = r < 0.2 ? 'heavy' : r < 0.4 ? 'splitter' : r < 0.6 ? 'stealth' : r < 0.8 ? 'shielded' : 'healer';
+        if (r < 0.18) {
+          enemyType = 'warper'; // Quantum teleportation rush
+        } else if (r < 0.34) {
+          enemyType = 'reflector'; // Energy reflect crystal
+        } else if (r < 0.48) {
+          enemyType = 'dreadnought'; // Tower hacker + shield aura
+        } else if (r < 0.62) {
+          enemyType = 'disruptor'; // EMP hacker
+        } else if (r < 0.78) {
+          enemyType = 'kamikaze'; // Suicide tower diving
+        } else if (r < 0.90) {
+          enemyType = 'splitter';
+        } else {
+          enemyType = 'healer';
+        }
       }
 
       queue.push({ type: enemyType, path: pathIdx });
@@ -441,27 +563,20 @@ export class GameEngine {
   // --- Main Update Loop ---
 
   update(dt) {
-    if (this.isPaused || this.isGameOver || this.isVictory) return;
+    if (this.isPaused || this.isGameOver || this.isVictory || this.waveState === 'SELECTING_PROTOCOL') return;
 
     // Synchronize gameSpeed with effects manager for particle throttling
     effects.gameSpeed = this.gameSpeed;
 
     const totalDt = dt * this.gameSpeed;
-
-    // Capped Sub-stepping:
-    // 1x, 2x, 3x: 1 step
-    // 5x: 2 steps
-    // 8x: 3 steps
-    // Prevents tunneling and projectile misses without 8x CPU calculation explosion!
     const steps = this.gameSpeed >= 8.0 ? 3 : (this.gameSpeed >= 5.0 ? 2 : 1);
     const subDt = totalDt / steps;
 
     for (let s = 0; s < steps; s++) {
       this.stepSimulation(subDt);
-      if (this.isGameOver || this.isVictory) break;
+      if (this.isGameOver || this.isVictory || this.waveState === 'SELECTING_PROTOCOL') break;
     }
 
-    // Heavy visual updates (particles, floating text decay, UI sync) execute ONCE per animation frame
     effects.update(totalDt);
     this.notifyUI();
   }
@@ -494,7 +609,12 @@ export class GameEngine {
         this.spawnTimer = 0;
         if (this.spawnQueue.length > 0) {
           const spawnData = this.spawnQueue.shift();
-          this.enemies.push(new Enemy(spawnData.type, spawnData.path, this.wave));
+          const spawnScaling = { ...(this.scaling || {}) };
+          if (spawnScaling.hasBossFrenzy && ENEMY_TYPES[spawnData.type]?.isBoss) {
+            spawnScaling.hpMult = (spawnScaling.hpMult || 1.0) * 1.5;
+            spawnScaling.speedMult = (spawnScaling.speedMult || 1.0) * 1.2;
+          }
+          this.enemies.push(new Enemy(spawnData.type, spawnData.path, this.wave, spawnScaling));
         } else {
           this.waveState = 'DEFENDING';
         }
@@ -506,15 +626,22 @@ export class GameEngine {
       }
     }
 
-    // 2. Update Towers
+    // 2. Update Towers with Protocols
     for (const tower of this.towers) {
-      tower.update(effectiveDt, this.enemies, this.projectiles, this.overchargeTimer > 0, this.map?.scale);
+      tower.update(effectiveDt, this.enemies, this.projectiles, this.overchargeTimer > 0, this.map?.scale, this.activeProtocols);
     }
 
     // 3. Update Enemies
     for (let i = this.enemies.length - 1; i >= 0; i--) {
       const enemy = this.enemies[i];
-      enemy.update(effectiveDt, this.map, this.enemies);
+      enemy.update(effectiveDt, this.map, this.enemies, this.towers, (type, pathIdx, dist) => {
+        const minion = new Enemy(type, pathIdx, this.wave, this.scaling);
+        minion.distance = Math.max(0, dist);
+        const p = this.map.getPointOnPath(minion.pathIndex, minion.distance);
+        minion.x = p.x;
+        minion.y = p.y;
+        this.enemies.push(minion);
+      });
 
       if (enemy.reachedNexus) {
         // Reached base: damage player based on enemy threat tier
@@ -522,12 +649,12 @@ export class GameEngine {
         this.baseHp = Math.max(0, this.baseHp - dmg);
         this.isFlawless = false;
 
-        // Dynamic impact effects: heavier shake and explosion for high threat units
+        // Dynamic impact effects
         const shakeIntensity = enemy.isBoss ? 18 : (dmg > 1 ? 10 : 6);
         effects.shake(shakeIntensity, enemy.isBoss ? 0.5 : 0.25);
         effects.emitExplosion(enemy.x, enemy.y, '#ff2e63', enemy.isBoss ? 35 : 20, enemy.isBoss ? 65 : 45);
 
-        // Show floating damage number at nexus position
+        // Floating damage number
         const nexusPixel = this.map.gridToPixel(this.map.data.nexus.x, this.map.data.nexus.y);
         effects.addText(
           nexusPixel.x,
@@ -539,6 +666,23 @@ export class GameEngine {
 
         audio.playHit();
 
+        // Protocol: Quantum Barrier (Emergency 6s Full Stun once per game when HP <= 35%)
+        if (
+          !this.emergencyBarrierUsed &&
+          this.baseHp > 0 &&
+          this.baseHp <= this.maxBaseHp * 0.35 &&
+          this.activeProtocols.some((p) => p.id === 'quantum_barrier')
+        ) {
+          this.emergencyBarrierUsed = true;
+          effects.shake(20, 0.6);
+          audio.playSkill('emp');
+          effects.addShockwave(this.map.width / 2 + this.map.offsetX, this.map.height / 2 + this.map.offsetY, 800, '#ffd000', 1.0, 10);
+          effects.addText(this.map.width / 2 + this.map.offsetX, 90, 'EMERGENCY QUANTUM BARRIER ACTIVATED!', '#ffd000', { isCrit: true, size: 22 });
+          for (const e of this.enemies) {
+            if (!e.dead) e.applyStun(6.0);
+          }
+        }
+
         if (this.baseHp <= 0) {
           this.triggerGameOver();
           return;
@@ -546,23 +690,31 @@ export class GameEngine {
       }
 
       if (enemy.dead) {
-        // Rewards for kill
         if (!enemy.reachedNexus) {
           const killBonus = state.getTechMultiplier('core_scrapper');
-          const reward = Math.round(enemy.reward * (1 + killBonus));
+          const hasSalvageProto = this.activeProtocols.some((p) => p.id === 'salvage_protocol');
+          const protoKillBonus = hasSalvageProto ? 0.15 : 0;
+
+          const reward = Math.round(enemy.reward * (1 + killBonus + protoKillBonus));
           this.gold += reward;
+          this.score += enemy.score || 10;
           state.recordGoldHold(this.gold);
           state.recordKill(enemy.isBoss);
 
-          if (enemy.coreDrop > 0) {
-            state.addCores(enemy.coreDrop);
-            effects.addText(enemy.x, enemy.y - 20, `+${enemy.coreDrop} CORES!`, '#00f0ff', { isCrit: true });
+          // Core drop (Normal + Bounty Harvest Protocol)
+          let cores = enemy.coreDrop || 0;
+          if (enemy.isBoss && this.activeProtocols.some((p) => p.id === 'bounty_harvest')) {
+            cores += 8;
+          }
+          if (cores > 0) {
+            state.addCores(cores);
+            effects.addText(enemy.x, enemy.y - 20, `+${cores} CORES!`, '#00f0ff', { isCrit: true });
           }
 
           // Handle Splitter enemy death spawns
           if (enemy.def.splitsInto && enemy.def.splitCount) {
             for (let s = 0; s < enemy.def.splitCount; s++) {
-              const mini = new Enemy(enemy.def.splitsInto, enemy.pathIndex, this.wave);
+              const mini = new Enemy(enemy.def.splitsInto, enemy.pathIndex, this.wave, this.scaling);
               mini.distance = Math.max(0, enemy.distance - (s * 0.4));
               this.enemies.push(mini);
             }
@@ -593,42 +745,165 @@ export class GameEngine {
       return;
     }
 
-    // Auto nanites repair
+    // Auto nanites repair (Tech Tree)
     const repairAmount = state.getTechMultiplier('base_nanites');
     if (repairAmount > 0 && this.baseHp < this.maxBaseHp) {
       this.baseHp = Math.min(this.maxBaseHp, this.baseHp + 1);
+    }
+
+    // Protocol: Nano Swarm Healer (Repair +2 HP every wave)
+    if (this.activeProtocols.some((p) => p.id === 'nano_swarm_healer') && this.baseHp < this.maxBaseHp) {
+      this.baseHp = Math.min(this.maxBaseHp, this.baseHp + 2);
     }
 
     // Wave bonus gold
     const waveBonus = 20 + Math.floor(this.wave * 3.5);
     this.gold += waveBonus;
 
+    // Banking Interest (Tech interest_banking + Protocol compound_interest)
+    const techInterestRate = state.getTechMultiplier('interest_banking');
+    const hasInterestProtocol = this.activeProtocols.some((p) => p.id === 'compound_interest');
+    const protoInterestRate = hasInterestProtocol ? 0.06 : 0;
+    const totalInterestRate = techInterestRate + protoInterestRate;
+
+    if (totalInterestRate > 0 && this.gold > 0) {
+      const maxInterest = hasInterestProtocol ? 200 : 120;
+      const earnedInterest = Math.min(maxInterest, Math.floor(this.gold * totalInterestRate));
+      if (earnedInterest > 0) {
+        this.gold += earnedInterest;
+        effects.addText(this.map.width / 2 + this.map.offsetX, 85, `+${earnedInterest} G (INTEREST)`, '#00ff9d');
+      }
+    }
+
     // Core reward per wave milestone
     if (this.wave % 5 === 0) {
-      state.addCores(3);
+      const milestoneCores = Math.round(3 * (this.scaling?.coreMult || 1.0));
+      state.addCores(milestoneCores);
+    }
+
+    // Endless Mode Milestones (Wave 25, 50, 75, 100...)
+    if (this.isEndless && this.wave % 25 === 0) {
+      const bonusEndlessCores = Math.round(25 * (this.scaling?.coreMult || 1.0));
+      state.addCores(bonusEndlessCores);
+      effects.addText(this.map.width / 2 + this.map.offsetX, 110, `MILESTONE: WAVE ${this.wave}! +${bonusEndlessCores} CORES!`, '#ffd000', { isCrit: true, size: 20 });
     }
 
     audio.playUpgrade();
+
+    // Roguelike Protocol Selection Trigger (Every 5 waves)
+    if (this.wave % 5 === 0) {
+      this.triggerProtocolSelection();
+      return;
+    }
+
     this.waveState = 'INTERMISSION';
     this.waveTimer = state.data.settings.autoNextWave ? 2.0 : 7.0;
+  }
+
+  // --- Tactical Protocol Selection System ---
+  triggerProtocolSelection() {
+    this.waveState = 'SELECTING_PROTOCOL';
+    audio.playVictory();
+
+    // Pick 3 random protocols not already acquired
+    const acquiredIds = new Set(this.activeProtocols.map((p) => p.id));
+    let pool = PROTOCOLS.filter((p) => !acquiredIds.has(p.id));
+
+    if (pool.length < 3) {
+      // Fallback: allow common repeat if pool exhausted
+      pool = PROTOCOLS.slice();
+    }
+
+    // Weighted selection by rarity
+    const pickOne = (available) => {
+      const r = Math.random();
+      let targetRarity = 'COMMON';
+      if (r < 0.15) targetRarity = 'EPIC';
+      else if (r < 0.50) targetRarity = 'RARE';
+
+      const matched = available.filter((p) => p.rarity === targetRarity);
+      if (matched.length > 0) {
+        return matched[Math.floor(Math.random() * matched.length)];
+      }
+      return available[Math.floor(Math.random() * available.length)];
+    };
+
+    const offered = [];
+    const tempPool = [...pool];
+    while (offered.length < 3 && tempPool.length > 0) {
+      const picked = pickOne(tempPool);
+      offered.push(picked);
+      const idx = tempPool.indexOf(picked);
+      if (idx !== -1) tempPool.splice(idx, 1);
+    }
+
+    if (this.onSelectProtocol) {
+      this.onSelectProtocol(offered, this.protocolRerollsLeft);
+    }
+  }
+
+  rerollProtocols() {
+    if (this.protocolRerollsLeft > 0) {
+      this.protocolRerollsLeft--;
+      audio.playUpgrade();
+      this.triggerProtocolSelection();
+      return true;
+    }
+    return false;
+  }
+
+  applyProtocol(protocol) {
+    this.activeProtocols.push(protocol);
+    state.recordProtocolChosen(protocol);
+
+    if (protocol.maxHpBonus) {
+      this.maxBaseHp += protocol.maxHpBonus;
+      this.baseHp += protocol.maxHpBonus;
+    }
+
+    // Recalculate stats for all towers
+    for (const t of this.towers) {
+      t.recalculateStats();
+    }
+
+    effects.addText(
+      this.map.width / 2 + this.map.offsetX,
+      100,
+      `PROTOCOL: ${protocol.name}`,
+      protocol.color,
+      { isCrit: true, size: 20 }
+    );
+    audio.playUpgrade();
+
+    this.waveState = 'INTERMISSION';
+    this.waveTimer = state.data.settings.autoNextWave ? 2.0 : 7.0;
+    this.notifyUI();
   }
 
   triggerGameOver() {
     this.isGameOver = true;
     audio.playDefeat();
-    state.recordWave(this.wave);
-    if (this.onGameOver) this.onGameOver(this.wave);
+    if (this.isEndless) {
+      state.recordEndlessScore(this.currentMapId, this.wave, this.score);
+    } else {
+      state.recordWave(this.wave);
+    }
+    if (this.onGameOver) this.onGameOver(this.wave, this.score);
   }
 
   triggerVictory() {
     this.isVictory = true;
     audio.playVictory();
     const mapData = MAPS.find((m) => m.id === this.currentMapId);
-    if (mapData?.coreReward) {
-      state.addCores(mapData.coreReward);
-    }
-    state.recordStageClear(this.currentMapId, this.wave, this.isFlawless);
-    if (this.onVictory) this.onVictory(this.wave, this.isFlawless, mapData?.coreReward);
+    let rewardCores = mapData?.coreReward || 20;
+
+    // Apply difficulty & mutator core multiplier
+    const coreMult = this.scaling?.coreMult || 1.0;
+    rewardCores = Math.round(rewardCores * coreMult);
+    state.addCores(rewardCores);
+
+    state.recordStageClear(this.currentMapId, this.wave, this.isFlawless, this.difficulty, this.activeModifiers);
+    if (this.onVictory) this.onVictory(this.wave, this.isFlawless, rewardCores, this.score);
   }
 
   // --- Render ---

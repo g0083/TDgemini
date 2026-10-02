@@ -23,6 +23,313 @@ export const COLORS = {
   freeze: '#60d5ff'
 };
 
+// ==========================================
+// GAME MODES, DIFFICULTIES & MUTATORS
+// ==========================================
+export const DIFFICULTIES = {
+  NORMAL: {
+    id: 'NORMAL',
+    name: 'NORMAL',
+    color: '#00f0ff',
+    desc: '標準脅威レベル。通常編成の侵略軍を迎撃せよ。',
+    hpMult: 1.0,
+    speedMult: 1.0,
+    rewardMult: 1.0,
+    coreMult: 1.0,
+    scoreMult: 1.0,
+    badge: '★'
+  },
+  HARD: {
+    id: 'HARD',
+    name: 'HARD',
+    color: '#ffd000',
+    desc: '強化部隊強襲。敵HP+35%、移動速度+10%、撃破資金-10%。コア獲得1.8倍！',
+    hpMult: 1.35,
+    speedMult: 1.10,
+    rewardMult: 0.90,
+    coreMult: 1.8,
+    scoreMult: 1.5,
+    badge: '★★'
+  },
+  NIGHTMARE: {
+    id: 'NIGHTMARE',
+    name: 'NIGHTMARE',
+    color: '#ff2e63',
+    desc: '地獄の殲滅戦。敵HP+80%、移動速度+25%、撃破資金-20%、全敵装甲強化。コア獲得3.0倍！',
+    hpMult: 1.80,
+    speedMult: 1.25,
+    rewardMult: 0.80,
+    coreMult: 3.0,
+    scoreMult: 2.5,
+    badge: '★★★'
+  }
+};
+
+// Danger Modifiers (Mutators)
+export const MODIFIERS = [
+  {
+    id: 'fast_enemies',
+    name: '超高速侵攻',
+    icon: 'rocket',
+    desc: 'すべての敵ユニットの移動速度 +25%',
+    scoreBonus: 0.25,
+    coreBonus: 0.25,
+    color: '#00f0ff'
+  },
+  {
+    id: 'hardened_armor',
+    name: 'ナノ装甲硬化',
+    icon: 'shield',
+    desc: '全敵の基本装甲 +15% ＆ シールド耐久値 +40%',
+    scoreBonus: 0.30,
+    coreBonus: 0.30,
+    color: '#ff9900'
+  },
+  {
+    id: 'budget_cut',
+    name: '予算削減',
+    icon: 'gold',
+    desc: '敵撃破時に得られるクレジット -25%',
+    scoreBonus: 0.35,
+    coreBonus: 0.35,
+    color: '#ff4d4d'
+  },
+  {
+    id: 'no_skills',
+    name: '通信途絶',
+    icon: 'zap',
+    desc: '全司令官スキル（爆撃・EMP・過負荷・補給）が使用不可',
+    scoreBonus: 0.40,
+    coreBonus: 0.40,
+    color: '#b84dff'
+  },
+  {
+    id: 'swarm_surge',
+    name: '大軍団強襲',
+    icon: 'target',
+    desc: '各ウェーブの敵の総出現数が +35% 増加',
+    scoreBonus: 0.45,
+    coreBonus: 0.45,
+    color: '#ffea00'
+  },
+  {
+    id: 'boss_frenzy',
+    name: '変異暴走ボス',
+    icon: 'wrench',
+    desc: 'ボスの最大HP +50% ＆ ボスの移動速度 +20%',
+    scoreBonus: 0.50,
+    coreBonus: 0.50,
+    color: '#ff0055'
+  }
+];
+
+// ==========================================
+// ROGUELIKE TACTICAL PROTOCOLS
+// ==========================================
+export const PROTOCOLS = [
+  // COMMON
+  {
+    id: 'overclock_rotors',
+    name: '高周波ローター',
+    rarity: 'COMMON',
+    icon: 'rate',
+    color: '#00f0ff',
+    desc: '全タワーの攻撃速度が永続で +12% 上昇する。',
+    statBonus: { fireRate: 0.12 }
+  },
+  {
+    id: 'dense_plasma',
+    name: '高密度荷電セル',
+    rarity: 'COMMON',
+    icon: 'damage',
+    color: '#00f0ff',
+    desc: '全タワーの基本攻撃力が永続で +15% 上昇する。',
+    statBonus: { damage: 0.15 }
+  },
+  {
+    id: 'targeting_optics',
+    name: '量子焦点レンズ',
+    rarity: 'COMMON',
+    icon: 'range',
+    color: '#00f0ff',
+    desc: '全タワーの射程範囲が永続で +12% 拡大する。',
+    statBonus: { range: 0.12 }
+  },
+  {
+    id: 'critical_matrix_card',
+    name: '精密照準回路',
+    rarity: 'COMMON',
+    icon: 'target',
+    color: '#00f0ff',
+    desc: '全タワーのクリティカル率が +8% 増加する。',
+    statBonus: { critChance: 0.08 }
+  },
+  {
+    id: 'salvage_protocol',
+    name: 'スクラップ採集ナノボット',
+    rarity: 'COMMON',
+    icon: 'gold',
+    color: '#00f0ff',
+    desc: '敵撃破時に得られるクレジットが +15% 増加する。',
+    killBonus: 0.15
+  },
+  {
+    id: 'kinetic_shock',
+    name: '衝撃反動フレーム',
+    rarity: 'COMMON',
+    icon: 'rocket',
+    color: '#00f0ff',
+    desc: '実弾兵器（パルス砲・バルカン・迫撃砲）の弾速+30%＆微小ノックバックを付与。',
+    kineticBoost: true
+  },
+
+  // RARE
+  {
+    id: 'chain_lightning',
+    name: '過負荷放電チェイン',
+    rarity: 'RARE',
+    icon: 'zap',
+    color: '#b84dff',
+    desc: 'クリティカル発生時、45%の確率で標的から最大3体の敵へ連鎖雷撃を放つ。',
+    chainLightning: true
+  },
+  {
+    id: 'frostbite_shatter',
+    name: '絶対零度粉砕',
+    rarity: 'RARE',
+    icon: 'satellite',
+    color: '#60d5ff',
+    desc: '減速または凍結中の敵に対する全タワーの与ダメージが +35% 増加する。',
+    freezeBonusDmg: 0.35
+  },
+  {
+    id: 'armor_melter',
+    name: 'テルミット侵食弾',
+    rarity: 'RARE',
+    icon: 'wrench',
+    color: '#ff9900',
+    desc: '全タワーの物理・通常攻撃が敵の装甲を18%無視して貫通する。',
+    armorPenetration: 0.18
+  },
+  {
+    id: 'rapid_spool',
+    name: 'ターボチャージ機構',
+    rarity: 'RARE',
+    icon: 'rate',
+    color: '#ffd000',
+    desc: 'タワーが攻撃するたびに自身の攻撃速度が+1.5%加速（最大+45%まで蓄積）。',
+    spooling: true
+  },
+  {
+    id: 'compound_interest',
+    name: '防衛基金利子運用',
+    rarity: 'RARE',
+    icon: 'gold',
+    color: '#00ff9d',
+    desc: 'ウェーブクリア時、手持ちクレジットの6%（最大200クレジット）を利子として受領。',
+    interestRate: 0.06,
+    maxInterest: 200
+  },
+  {
+    id: 'titan_slayer',
+    name: 'タイタンキラー弾頭',
+    rarity: 'RARE',
+    icon: 'target',
+    color: '#ff2e63',
+    desc: 'ボスおよびHP1000以上のエリート敵への全タワー与ダメージが +40% 増加する。',
+    bossDmgBonus: 0.40
+  },
+  {
+    id: 'energy_resonance',
+    name: 'シナジー共鳴場',
+    rarity: 'RARE',
+    icon: 'core',
+    color: '#7bff00',
+    desc: 'シナジーコアの有効範囲が+25%拡大し、全バフ効果（攻撃力・速度）が+15%強化される。',
+    boosterBoost: true
+  },
+  {
+    id: 'bounty_harvest',
+    name: 'コア収穫プロトコル',
+    rarity: 'RARE',
+    icon: 'core',
+    color: '#00f0ff',
+    desc: 'ボス撃破時、クォンタムコアを即座に追加で +8 個ボーナス獲得する。',
+    bossCoreBonus: 8
+  },
+
+  // EPIC
+  {
+    id: 'quantum_barrier',
+    name: '緊急防壁エマージェンシー',
+    rarity: 'EPIC',
+    icon: 'shield',
+    color: '#ffd000',
+    desc: '拠点HPが最大値の35%以下になった瞬間、画面全体の全敵を6秒間完全麻痺させる（1戦1回）。',
+    barrierEmergency: true
+  },
+  {
+    id: 'cluster_payload',
+    name: 'クラスター爆砕弾頭',
+    rarity: 'EPIC',
+    icon: 'rocket',
+    color: '#ff007f',
+    desc: '迫撃砲およびレールガンの弾丸が着弾時に周囲へ3つのクラスター小型子弾を撒き散らす。',
+    clusterBombs: true
+  },
+  {
+    id: 'hyper_execute',
+    name: '絶滅処刑コード',
+    rarity: 'EPIC',
+    icon: 'damage',
+    color: '#ff2e63',
+    desc: 'HP15%以下の通常敵、およびHP8%以下のボス敵に攻撃が当たると一撃で即死・消滅させる。',
+    executeThreshold: 0.15,
+    bossExecuteThreshold: 0.08
+  },
+  {
+    id: 'nano_swarm_healer',
+    name: '自己複製ナノマトリクス',
+    rarity: 'EPIC',
+    icon: 'shield',
+    color: '#00ff9d',
+    desc: '最大拠点HPが+6増加し、毎ウェーブ終了時に拠点HPを即座に+2自動修復する。',
+    maxHpBonus: 6,
+    waveRepair: 2
+  },
+  {
+    id: 'orbital_overdrive',
+    name: '衛星リンク同期過負荷',
+    rarity: 'EPIC',
+    icon: 'satellite',
+    color: '#00f0ff',
+    desc: '全司令官スキルのクールダウンが25%短縮され、オーバードライブの効果時間が+5秒延長。',
+    skillCdReduce: 0.25,
+    skillDurationBoost: 5
+  },
+  {
+    id: 'tesla_storm',
+    name: 'テスラストーム・カタストロフ',
+    rarity: 'EPIC',
+    icon: 'zap',
+    color: '#b84dff',
+    desc: 'テスラコイルの連鎖数が+3増加し、シールドへのダメージが通常の3.5倍に跳ね上がる。',
+    teslaStorm: true
+  }
+];
+
+// ==========================================
+// TOWER MASTERY SYSTEM (永続熟練度)
+// ==========================================
+export const TOWER_MASTERY_LEVELS = [
+  { level: 0, killsReq: 0, title: '未配属', bonusDesc: 'なし' },
+  { level: 1, killsReq: 80, title: '初級運用', bonusDesc: '射程 +4%', bonus: { range: 0.04 } },
+  { level: 2, killsReq: 250, title: '熟練配備', bonusDesc: '攻撃力 +5%', bonus: { damage: 0.05 } },
+  { level: 3, killsReq: 600, title: 'ベテラン', bonusDesc: '攻撃速度 +6%', bonus: { fireRate: 0.06 } },
+  { level: 4, killsReq: 1200, title: 'エキスパート', bonusDesc: '会心率 +4%', bonus: { critChance: 0.04 } },
+  { level: 5, killsReq: 2500, title: 'グランドマスター', bonusDesc: '全能力+3% ＆ 建設コスト -10%', bonus: { range: 0.03, damage: 0.03, fireRate: 0.03, costReduction: 0.10 } }
+];
+
 // Tower Definitions with Detailed Roles & Tactical Strengths
 export const TOWER_TYPES = {
   pulse: {
@@ -529,6 +836,91 @@ export const ENEMY_TYPES = {
     isStealth: true,
     score: 50
   },
+  // --- Advanced & Endless Exclusive Units ---
+  disruptor: {
+    id: 'disruptor',
+    name: 'ディスラプター',
+    hp: 240,
+    speed: 72,
+    reward: 35,
+    nexusDamage: 2,
+    color: '#ff00aa',
+    size: 15,
+    shape: 'disruptor',
+    attacksTowers: true,
+    attackRange: 140,
+    attackCooldown: 4.5,
+    empDuration: 2.6,
+    score: 70
+  },
+  kamikaze: {
+    id: 'kamikaze',
+    name: 'カミカゼドローン',
+    hp: 85,
+    speed: 145,
+    reward: 20,
+    nexusDamage: 2,
+    color: '#ff3b30',
+    size: 11,
+    shape: 'kamikaze',
+    suicideOnTowers: true,
+    targetTowerRange: 95,
+    stunBlastRadius: 75,
+    stunDuration: 2.5,
+    score: 45
+  },
+  warper: {
+    id: 'warper',
+    name: 'クォンタムワーパー',
+    hp: 310,
+    shield: 160,
+    speed: 82,
+    reward: 40,
+    nexusDamage: 2,
+    color: '#00e5ff',
+    size: 14,
+    shape: 'warper',
+    canWarp: true,
+    warpCooldown: 3.2,
+    warpDistance: 2.4,
+    score: 80
+  },
+  reflector: {
+    id: 'reflector',
+    name: 'プリズムリフレクター',
+    hp: 420,
+    armor: 0.15,
+    speed: 62,
+    reward: 48,
+    nexusDamage: 3,
+    color: '#e040fb',
+    size: 17,
+    shape: 'reflector',
+    reflectEnergy: true,
+    energyDamageReduction: 0.40,
+    explosiveVulnerability: 1.8,
+    score: 95
+  },
+  dreadnought: {
+    id: 'dreadnought',
+    name: 'ドレッドノート',
+    hp: 1150,
+    shield: 750,
+    armor: 0.35,
+    speed: 46,
+    reward: 95,
+    nexusDamage: 4,
+    color: '#ff9100',
+    size: 22,
+    shape: 'dreadnought',
+    attacksTowers: true,
+    attackRange: 165,
+    attackCooldown: 5.0,
+    empDuration: 3.0,
+    shieldAura: true,
+    shieldAuraRange: 85,
+    score: 220
+  },
   // Bosses
   boss_colossus: {
     id: 'boss_colossus',
@@ -550,8 +942,8 @@ export const ENEMY_TYPES = {
     id: 'boss_reaper',
     name: 'ヴォイド リーパー',
     isBoss: true,
-    hp: 5800,
-    shield: 1800,
+    hp: 6500,
+    shield: 2200,
     speed: 46,
     reward: 300,
     nexusDamage: 7,
@@ -566,9 +958,9 @@ export const ENEMY_TYPES = {
     id: 'boss_overlord',
     name: 'クォンタム オーバーロード',
     isBoss: true,
-    hp: 11000,
-    shield: 3500,
-    armor: 0.40,
+    hp: 8500,
+    shield: 2600,
+    armor: 0.35,
     speed: 44,
     reward: 500,
     nexusDamage: 10,
@@ -577,6 +969,28 @@ export const ENEMY_TYPES = {
     shape: 'boss_omega',
     score: 2000,
     coreDrop: 40
+  },
+  boss_leviathan: {
+    id: 'boss_leviathan',
+    name: 'アビス レヴィアサン',
+    isBoss: true,
+    hp: 13500,
+    shield: 4800,
+    armor: 0.40,
+    speed: 36,
+    reward: 850,
+    nexusDamage: 12,
+    color: '#76ff03',
+    size: 36,
+    shape: 'boss_leviathan',
+    attacksTowers: true,
+    attackRange: 210,
+    attackCooldown: 5.5,
+    empDuration: 3.5,
+    spawnsMinions: 'kamikaze',
+    spawnMinionCooldown: 7.0,
+    score: 4500,
+    coreDrop: 60
   }
 };
 
@@ -692,6 +1106,191 @@ export const MAPS = [
     ],
     nexus: { x: 8, y: 5 },
     spawnPoints: [
+      { x: 0, y: 5 },
+      { x: 15, y: 5 },
+      { x: 8, y: 0 },
+      { x: 8, y: 9 }
+    ]
+  },
+  {
+    id: 'twin_bastion',
+    name: '05. TWIN BASTION',
+    desc: '左右に分かれた2基のネクサスを同時防衛する超緊迫の複合作戦区域。',
+    difficulty: 'HARD',
+    wavesCount: 40,
+    baseHp: 25,
+    startGold: 500,
+    coreReward: 50,
+    gridWidth: 16,
+    gridHeight: 10,
+    nexuses: [
+      { x: 2, y: 5, label: 'ALPHA' },
+      { x: 13, y: 5, label: 'BETA' }
+    ],
+    nexus: { x: 2, y: 5 }, // primary fallback
+    paths: [
+      [
+        { x: 0, y: 2 },
+        { x: 4, y: 2 },
+        { x: 4, y: 5 },
+        { x: 2, y: 5 }
+      ],
+      [
+        { x: 15, y: 2 },
+        { x: 11, y: 2 },
+        { x: 11, y: 5 },
+        { x: 13, y: 5 }
+      ],
+      [
+        { x: 2, y: 9 },
+        { x: 2, y: 7 },
+        { x: 5, y: 7 },
+        { x: 5, y: 5 },
+        { x: 2, y: 5 }
+      ],
+      [
+        { x: 13, y: 9 },
+        { x: 13, y: 7 },
+        { x: 10, y: 7 },
+        { x: 10, y: 5 },
+        { x: 13, y: 5 }
+      ]
+    ],
+    spawnPoints: [
+      { x: 0, y: 2 },
+      { x: 15, y: 2 },
+      { x: 2, y: 9 },
+      { x: 13, y: 9 }
+    ]
+  },
+  {
+    id: 'hyper_corridor',
+    name: '06. HYPER HIGHWAY',
+    desc: '中央を貫く直線ハイウェイと外周迂回線。超高速強襲部隊を迎え撃て。',
+    difficulty: 'HARD',
+    wavesCount: 42,
+    baseHp: 20,
+    startGold: 480,
+    coreReward: 60,
+    gridWidth: 16,
+    gridHeight: 10,
+    paths: [
+      // Fast straight middle
+      [
+        { x: 0, y: 4 },
+        { x: 14, y: 4 }
+      ],
+      // Upper detour
+      [
+        { x: 0, y: 1 },
+        { x: 7, y: 1 },
+        { x: 7, y: 4 },
+        { x: 14, y: 4 }
+      ],
+      // Lower detour
+      [
+        { x: 0, y: 8 },
+        { x: 10, y: 8 },
+        { x: 10, y: 4 },
+        { x: 14, y: 4 }
+      ]
+    ],
+    nexus: { x: 14, y: 4 },
+    spawnPoints: [
+      { x: 0, y: 4 },
+      { x: 0, y: 1 },
+      { x: 0, y: 8 }
+    ]
+  },
+  {
+    id: 'neon_labyrinth',
+    name: '07. NEON LABYRINTH',
+    desc: '複雑に入り組む巨大迷路回路。蛇行地点での集中砲火と範囲殲滅が鍵。',
+    difficulty: 'EXPERT',
+    wavesCount: 45,
+    baseHp: 25,
+    startGold: 500,
+    coreReward: 80,
+    gridWidth: 16,
+    gridHeight: 10,
+    paths: [
+      [
+        { x: 0, y: 0 },
+        { x: 14, y: 0 },
+        { x: 14, y: 2 },
+        { x: 2, y: 2 },
+        { x: 2, y: 4 },
+        { x: 14, y: 4 },
+        { x: 14, y: 6 },
+        { x: 2, y: 6 },
+        { x: 2, y: 8 },
+        { x: 12, y: 8 },
+        { x: 12, y: 9 },
+        { x: 8, y: 9 }
+      ]
+    ],
+    nexus: { x: 8, y: 9 },
+    spawnPoints: [{ x: 0, y: 0 }]
+  },
+  {
+    id: 'quantum_singularity',
+    name: '08. QUANTUM VOID',
+    desc: '全方位8箇所から同時侵攻する究極の試練。防衛線の死角は一切許されない。',
+    difficulty: 'NIGHTMARE',
+    wavesCount: 55,
+    baseHp: 30,
+    startGold: 650,
+    coreReward: 150,
+    gridWidth: 16,
+    gridHeight: 10,
+    paths: [
+      // 4 corners
+      [
+        { x: 0, y: 0 },
+        { x: 4, y: 4 },
+        { x: 8, y: 4 }
+      ],
+      [
+        { x: 15, y: 0 },
+        { x: 12, y: 4 },
+        { x: 8, y: 4 }
+      ],
+      [
+        { x: 0, y: 9 },
+        { x: 4, y: 6 },
+        { x: 8, y: 6 },
+        { x: 8, y: 5 }
+      ],
+      [
+        { x: 15, y: 9 },
+        { x: 12, y: 6 },
+        { x: 8, y: 6 },
+        { x: 8, y: 5 }
+      ],
+      // 4 cardinals
+      [
+        { x: 0, y: 5 },
+        { x: 8, y: 5 }
+      ],
+      [
+        { x: 15, y: 5 },
+        { x: 8, y: 5 }
+      ],
+      [
+        { x: 8, y: 0 },
+        { x: 8, y: 4 }
+      ],
+      [
+        { x: 8, y: 9 },
+        { x: 8, y: 5 }
+      ]
+    ],
+    nexus: { x: 8, y: 5 },
+    spawnPoints: [
+      { x: 0, y: 0 },
+      { x: 15, y: 0 },
+      { x: 0, y: 9 },
+      { x: 15, y: 9 },
       { x: 0, y: 5 },
       { x: 15, y: 5 },
       { x: 8, y: 0 },
@@ -890,6 +1489,46 @@ export const TECH_TREE = [
     costPerLevel: (lvl) => Math.floor(20 * Math.pow(1.5, lvl)),
     effectPerLevel: 3, // +3 max hp & repair
     format: (val) => `HP +${val}`
+  },
+  {
+    id: 'interest_banking',
+    name: '金融運用アルゴリズム',
+    icon: 'gold',
+    desc: 'ウェーブクリア時、所持クレジットに応じた利子ボーナスを獲得。',
+    maxLevel: 5,
+    costPerLevel: (lvl) => Math.floor(25 * Math.pow(1.5, lvl)),
+    effectPerLevel: 0.01, // +1% interest per level up to 5%
+    format: (val) => `利子 +${Math.round(val * 100)}%`
+  },
+  {
+    id: 'crit_devastation',
+    name: '高調波過負荷弾頭',
+    icon: 'target',
+    desc: 'クリティカル発生時のダメージ倍率（基本2.0倍）をさらに向上。',
+    maxLevel: 6,
+    costPerLevel: (lvl) => Math.floor(30 * Math.pow(1.5, lvl)),
+    effectPerLevel: 0.15, // +15% crit multiplier per level (up to 2.9x)
+    format: (val) => `会心倍率 +${Math.round(val * 100)}%`
+  },
+  {
+    id: 'heavy_ordnance',
+    name: '対要塞徹甲兵装',
+    icon: 'damage',
+    desc: '巨大ボスおよびヘビータンクに対する全タワーの与ダメージを向上。',
+    maxLevel: 6,
+    costPerLevel: (lvl) => Math.floor(28 * Math.pow(1.5, lvl)),
+    effectPerLevel: 0.06, // +6% boss/heavy damage per level
+    format: (val) => `対大型 +${Math.round(val * 100)}%`
+  },
+  {
+    id: 'protocol_reroll',
+    name: '量子分岐予測プロセッサ',
+    icon: 'core',
+    desc: '戦術プロトコル選択時に候補を再抽選（リロール）できる回数を付与。',
+    maxLevel: 3,
+    costPerLevel: (lvl) => Math.floor(45 * Math.pow(1.8, lvl)),
+    effectPerLevel: 1, // +1 reroll per level
+    format: (val) => `リロール +${val}回`
   }
 ];
 
@@ -898,19 +1537,49 @@ export const ACHIEVEMENTS = [
   { id: 'first_kill', title: '初陣', desc: '初めて敵を1体撃破する。', reward: 5, check: (s) => s.totalKills >= 1 },
   { id: 'kills_100', title: '殲滅部隊', desc: '累計100体の敵を撃破する。', reward: 15, check: (s) => s.totalKills >= 100 },
   { id: 'kills_1000', title: 'サイバーウォーロード', desc: '累計1000体の敵を撃破する。', reward: 50, check: (s) => s.totalKills >= 1000 },
+  { id: 'kills_5000', title: '殲滅の化身', desc: '累計5000体の敵を撃破する。', reward: 100, check: (s) => s.totalKills >= 5000 },
   { id: 'wave_10', title: '初期防衛線', desc: 'ウェーブ10に到達する。', reward: 10, check: (s) => s.highestWave >= 10 },
   { id: 'wave_30', title: 'ベテラン司令官', desc: 'ウェーブ30に到達する。', reward: 30, check: (s) => s.highestWave >= 30 },
   { id: 'wave_50', title: '不落の要塞', desc: 'ウェーブ50に到達する。', reward: 80, check: (s) => s.highestWave >= 50 },
+  { id: 'wave_100', title: '無限の防壁', desc: 'ウェーブ100に到達する。', reward: 150, check: (s) => s.highestWave >= 100 },
   { id: 'boss_kill', title: '巨兵落とし', desc: '初めてボス敵を撃破する。', reward: 25, check: (s) => s.bossesDefeated >= 1 },
   { id: 'boss_10', title: 'タイタンバスター', desc: '累計10体のボスを撃破する。', reward: 60, check: (s) => s.bossesDefeated >= 10 },
+  { id: 'boss_50', title: 'タイタンスレイヤー', desc: '累計50体のボスを撃破する。', reward: 120, check: (s) => s.bossesDefeated >= 50 },
+  
+  // Stages
   { id: 'stage_clear_1', title: 'Alpha制覇', desc: 'Stage 01 をクリアする。', reward: 20, check: (s) => s.stagesCleared?.includes('nexus_prime') },
   { id: 'stage_clear_2', title: 'Twin Cross制覇', desc: 'Stage 02 をクリアする。', reward: 35, check: (s) => s.stagesCleared?.includes('dual_cross') },
   { id: 'stage_clear_3', title: 'Maze走破', desc: 'Stage 03 をクリアする。', reward: 50, check: (s) => s.stagesCleared?.includes('silicon_maze') },
   { id: 'stage_clear_4', title: 'Vortex完全防衛', desc: 'Stage 04 をクリアする。', reward: 100, check: (s) => s.stagesCleared?.includes('vortex_core') },
+  { id: 'stage_clear_5', title: 'Twin Bastion制覇', desc: 'Stage 05 をクリアする。', reward: 60, check: (s) => s.stagesCleared?.includes('twin_bastion') },
+  { id: 'stage_clear_6', title: 'Hyper Highway走破', desc: 'Stage 06 をクリアする。', reward: 70, check: (s) => s.stagesCleared?.includes('hyper_corridor') },
+  { id: 'stage_clear_7', title: 'Labyrinth踏破', desc: 'Stage 07 をクリアする。', reward: 90, check: (s) => s.stagesCleared?.includes('neon_labyrinth') },
+  { id: 'stage_clear_8', title: 'Void特異点破壊', desc: 'Stage 08 をクリアする。', reward: 180, check: (s) => s.stagesCleared?.includes('quantum_singularity') },
+
+  // Difficulties & Modifiers
+  { id: 'diff_hard', title: '試練の克服者', desc: '難易度HARD以上でいずれかのステージをクリア。', reward: 40, check: (s) => s.hardClears >= 1 },
+  { id: 'diff_nightmare', title: '悪夢の支配者', desc: '難易度NIGHTMAREでいずれかのステージをクリア。', reward: 100, check: (s) => s.nightmareClears >= 1 },
+  { id: 'mutator_3', title: '極限戦術家', desc: 'デンジャー変異体を3つ以上同時に有効にしてクリア。', reward: 50, check: (s) => s.maxModifiersCleared >= 3 },
+  { id: 'mutator_all', title: '絶対防衛の神話', desc: '全6種の変異体をすべて有効にしてステージをクリア。', reward: 200, check: (s) => s.maxModifiersCleared >= 6 },
+
+  // Tactical Protocols
+  { id: 'protocol_first', title: '戦術プロトコル起動', desc: '初めて戦術プロトコルを選択・獲得する。', reward: 15, check: (s) => (s.protocolsChosen || 0) >= 1 },
+  { id: 'protocol_10', title: '技術の集積', desc: '累計10枚の戦術プロトコルを獲得する。', reward: 40, check: (s) => (s.protocolsChosen || 0) >= 10 },
+  { id: 'protocol_epic', title: '神話級オーバードライブ', desc: 'EPICレアリティの戦術プロトコルを獲得する。', reward: 50, check: (s) => s.epicProtocolsFound >= 1 },
+
+  // Tower Mastery
+  { id: 'mastery_lvl1', title: '砲手への第一歩', desc: 'いずれかのタワーで熟練度Lv.1に到達する。', reward: 20, check: (s) => s.maxMasteryLevel >= 1 },
+  { id: 'mastery_lvl3', title: 'ベテランクルー', desc: 'いずれかのタワーで熟練度Lv.3に到達する。', reward: 50, check: (s) => s.maxMasteryLevel >= 3 },
+  { id: 'mastery_lvl5', title: 'グランドマスター砲撃手', desc: 'いずれかのタワーで熟練度Lv.5（最大）に到達する。', reward: 120, check: (s) => s.maxMasteryLevel >= 5 },
+  { id: 'all_mastery_1', title: '全兵科習熟', desc: '全8種類のタワーすべてで熟練度Lv.1以上に到達する。', reward: 80, check: (s) => s.allTowersMastery1 },
+
+  // General & Challenges
   { id: 'all_towers', title: '技術の結晶', desc: '全8種類のタワーを1度以上建設する。', reward: 30, check: (s) => s.towersBuiltCount >= 8 },
   { id: 'upgrade_path', title: '特化進化', desc: 'タワーの分岐進化（Path A / B）を実行する。', reward: 15, check: (s) => s.evolvedTowers >= 1 },
   { id: 'skill_master', title: '戦略支援', desc: '司令官スキルを累計20回使用する。', reward: 25, check: (s) => s.skillsUsed >= 20 },
   { id: 'rich_commander', title: '大富豪', desc: 'ゲーム中に一度に1500クレジット以上所持する。', reward: 30, check: (s) => s.maxGoldHold >= 1500 },
+  { id: 'ultra_rich', title: '量子財閥', desc: 'ゲーム中に一度に3000クレジット以上所持する。', reward: 60, check: (s) => s.maxGoldHold >= 3000 },
   { id: 'researcher', title: '研究開発', desc: '研究所でアップグレードを累計10回購入する。', reward: 30, check: (s) => s.totalTechBought >= 10 },
+  { id: 'tech_titan', title: '科学技術の最高峰', desc: '研究所でアップグレードを累計30回購入する。', reward: 100, check: (s) => s.totalTechBought >= 30 },
   { id: 'flawless', title: '完全防衛 (Flawless)', desc: 'ノーダメージ（拠点HPMAXのまま）でステージをクリア。', reward: 50, check: (s) => s.flawlessVictory }
 ];

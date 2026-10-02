@@ -1,8 +1,6 @@
-// ==========================================
-// PROJECTILES & WEAPON EFFECTS
-// ==========================================
 import { effects } from './particles.js';
 import { audio } from './audio.js';
+import { state } from './state.js';
 
 export class Projectile {
   constructor(options) {
@@ -15,6 +13,8 @@ export class Projectile {
     this.type = options.type || 'bullet'; // bullet, missile, splash, piercing
     this.damageType = options.damageType || 'physical';
     this.isCrit = options.isCrit || false;
+    this.sourceTowerType = options.sourceTowerType || null;
+    this.protocols = options.protocols || [];
 
     // Splash
     this.splashRadius = options.splashRadius || 0;
@@ -75,7 +75,7 @@ export class Projectile {
           const dist = Math.hypot(enemy.x - this.x, enemy.y - this.y);
           if (dist <= enemy.size + 8) {
             this.hitEnemies.add(enemy.id);
-            this.applyDamage(enemy);
+            this.applyDamage(enemy, allEnemies);
             if (this.hitEnemies.size >= this.pierceCount) {
               this.dead = true;
               break;
@@ -105,7 +105,7 @@ export class Projectile {
     if (this.target && !this.target.dead) {
       const dist = Math.hypot(this.target.x - this.x, this.target.y - this.y);
       if (dist <= this.target.size + 6) {
-        this.applyDamage(this.target);
+        this.applyDamage(this.target, allEnemies);
         this.dead = true;
       }
     } else {
@@ -114,7 +114,7 @@ export class Projectile {
         if (!enemy.dead) {
           const dist = Math.hypot(enemy.x - this.x, enemy.y - this.y);
           if (dist <= enemy.size + 6) {
-            this.applyDamage(enemy);
+            this.applyDamage(enemy, allEnemies);
             this.dead = true;
             break;
           }
@@ -128,8 +128,9 @@ export class Projectile {
     }
   }
 
-  applyDamage(enemy) {
-    enemy.takeDamage(this.damage, this.damageType, this.isCrit);
+  applyDamage(enemy, allEnemies) {
+    const wasDead = enemy.dead;
+    enemy.takeDamage(this.damage, this.damageType, this.isCrit, this.protocols);
 
     if (this.slowAmount > 0) {
       enemy.applySlow(this.slowAmount, this.slowDuration);
@@ -141,6 +142,29 @@ export class Projectile {
       // Bosses have 85% knockback resistance so rapid fire cannot pin them at spawn
       const kbFactor = enemy.isBoss ? 0.15 : 1.0;
       enemy.distance = Math.max(0, enemy.distance - this.knockback * 0.05 * kbFactor);
+    }
+
+    // Protocol: Chain Lightning on Crit
+    if (this.isCrit && allEnemies && this.protocols?.some((p) => p.id === 'chain_lightning')) {
+      if (Math.random() < 0.45) {
+        let chained = 0;
+        for (const other of allEnemies) {
+          if (!other.dead && other.id !== enemy.id) {
+            const d = Math.hypot(other.x - enemy.x, other.y - enemy.y);
+            if (d <= 130) {
+              effects.addShockwave(other.x, other.y, 25, '#b84dff', 0.2, 2);
+              other.takeDamage(this.damage * 0.65, 'electric', false, this.protocols);
+              chained++;
+              if (chained >= 3) break;
+            }
+          }
+        }
+      }
+    }
+
+    // Record Mastery Kill if enemy died from this hit
+    if (!wasDead && enemy.dead && this.sourceTowerType) {
+      state.recordTowerKill(this.sourceTowerType);
     }
 
     effects.emitSparks(this.x, this.y, this.color, 4, 60);
@@ -156,16 +180,23 @@ export class Projectile {
         const dist = Math.hypot(enemy.x - this.x, enemy.y - this.y);
         if (dist <= this.splashRadius) {
           const falloff = 1 - (dist / this.splashRadius) * 0.4;
-          enemy.takeDamage(this.damage * falloff, 'explosive', this.isCrit);
+          const wasDead = enemy.dead;
+          enemy.takeDamage(this.damage * falloff, 'explosive', this.isCrit, this.protocols);
+          if (!wasDead && enemy.dead && this.sourceTowerType) {
+            state.recordTowerKill(this.sourceTowerType);
+          }
         }
       }
     }
 
-    // Cluster sub-munitions
-    if (this.clusterCount > 0 && newProjectiles) {
+    // Cluster sub-munitions (Native Mortar cluster or Protocol cluster_payload)
+    const hasClusterProtocol = this.protocols?.some((p) => p.id === 'cluster_payload');
+    const effectiveCluster = this.clusterCount + (hasClusterProtocol ? 3 : 0);
+
+    if (effectiveCluster > 0 && newProjectiles) {
       const scale = this.mapScale || 1.0;
-      for (let i = 0; i < this.clusterCount; i++) {
-        const offsetAngle = (i * Math.PI * 2) / this.clusterCount;
+      for (let i = 0; i < effectiveCluster; i++) {
+        const offsetAngle = (i * Math.PI * 2) / effectiveCluster;
         const targetX = this.x + Math.cos(offsetAngle) * 50 * scale;
         const targetY = this.y + Math.sin(offsetAngle) * 50 * scale;
         newProjectiles.push(new Projectile({
@@ -178,6 +209,8 @@ export class Projectile {
           color: '#ff9100',
           isArc: true,
           damageType: 'explosive',
+          sourceTowerType: this.sourceTowerType,
+          protocols: this.protocols,
           mapScale: scale
         }));
       }

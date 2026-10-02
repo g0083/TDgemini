@@ -307,6 +307,51 @@ export function getEnemyVisualSvg(enemy, size = 36) {
       // Phantom Stealth Chevron
       geo = `<polygon points="29,22 15,13 19,22 15,31" fill="${color}" stroke="#ffffff" stroke-width="1.5" stroke-linejoin="round" opacity="0.85"/>`;
       break;
+    case 'disruptor':
+      // Disruptor EMP Hacker Diamond + 3 Spikes
+      geo = `
+        <polygon points="34,22 22,14 10,22 22,30" fill="${color}" stroke="#ffffff" stroke-width="1.6" stroke-linejoin="round"/>
+        <line x1="22" y1="22" x2="35" y2="22" stroke="#ffffff" stroke-width="1.5"/>
+        <line x1="22" y1="22" x2="15" y2="10" stroke="#ffffff" stroke-width="1.5"/>
+        <line x1="22" y1="22" x2="15" y2="34" stroke="#ffffff" stroke-width="1.5"/>
+      `;
+      break;
+    case 'kamikaze':
+      // Kamikaze Fast Spear Rocket + Glowing Detonation Core
+      geo = `
+        <polygon points="35,22 11,13 16,22 11,31" fill="${color}" stroke="#ffffff" stroke-width="1.6" stroke-linejoin="round"/>
+        <circle cx="20" cy="22" r="3.5" fill="#ffd000" stroke="#ffffff" stroke-width="1"/>
+      `;
+      break;
+    case 'warper':
+      // Concentric Warper Teleport Squares
+      geo = `
+        <rect x="13" y="13" width="18" height="18" fill="${color}" stroke="#ffffff" stroke-width="1.5"/>
+        <rect x="16" y="16" width="12" height="12" fill="none" stroke="#00e5ff" stroke-width="1.5" transform="rotate(45 22 22)"/>
+      `;
+      break;
+    case 'reflector':
+      // Prism Reflector Crystal Hexagon with cross facets
+      geo = `
+        <polygon points="33,22 27.5,31.5 16.5,31.5 11,22 16.5,12.5 27.5,12.5" fill="${color}" stroke="#ffffff" stroke-width="1.6" stroke-linejoin="round"/>
+        <line x1="15" y1="15" x2="29" y2="29" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/>
+        <line x1="29" y1="15" x2="15" y2="29" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/>
+      `;
+      break;
+    case 'dreadnought':
+      // Heavy Dreadnought Fortress
+      geo = `
+        <polygon points="35,22 28,14 11,13 15,22 11,31 28,30" fill="${color}" stroke="#ffffff" stroke-width="1.8" stroke-linejoin="round"/>
+        <rect x="18" y="18" width="8" height="8" rx="1" fill="#ff0055" stroke="#ffffff" stroke-width="1"/>
+      `;
+      break;
+    case 'boss_leviathan':
+      // Super Boss Leviathan
+      geo = `
+        <polygon points="36,22 30,29 22,35 14,29 8,22 14,15 22,9 30,15" fill="${color}" stroke="#ffffff" stroke-width="2" stroke-linejoin="round"/>
+        <circle cx="22" cy="22" r="6" fill="#ffffff" stroke="#76ff03" stroke-width="2"/>
+      `;
+      break;
     case 'boss_octagon':
     case 'boss_star':
     case 'boss_omega':

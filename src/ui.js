@@ -1,7 +1,7 @@
 // ==========================================
 // USER INTERFACE & MOBILE CONTROLLER
 // ==========================================
-import { TOWER_TYPES, MAPS, TECH_TREE, ACHIEVEMENTS, SKILLS, SKILLS_GUIDE, COMBAT_GUIDE, ENEMY_TYPES } from './constants.js';
+import { TOWER_TYPES, MAPS, TECH_TREE, ACHIEVEMENTS, SKILLS, SKILLS_GUIDE, COMBAT_GUIDE, ENEMY_TYPES, DIFFICULTIES, MODIFIERS, PROTOCOLS, TOWER_MASTERY_LEVELS } from './constants.js';
 import { ICONS, getTowerVisualSvg, getEnemyVisualSvg } from './icons.js';
 import { state } from './state.js';
 import { audio } from './audio.js';
@@ -11,6 +11,8 @@ export class UIManager {
     this.game = gameEngine;
     this.deferredInstallPrompt = null;
     this.selectedShopType = null;
+    this.selectedDifficulty = 'NORMAL';
+    this.selectedModifiers = new Set();
 
     // Cache DOM Elements
     this.dom = {
@@ -30,6 +32,8 @@ export class UIManager {
       pauseBtn: document.getElementById('btn-pause'),
       audioBtn: document.getElementById('btn-audio'),
       guideQuickBtn: document.getElementById('btn-open-guide-quick'),
+      protocolsQuickBtn: document.getElementById('btn-open-protocols-quick'),
+      hudProtoBadge: document.getElementById('hud-proto-badge'),
 
       // Boss Encounter Global Health Bar
       bossHudBar: document.getElementById('boss-hud-bar'),
@@ -65,6 +69,7 @@ export class UIManager {
 
       // Inspector Elements (After Placement)
       inspectorTitle: document.getElementById('insp-title'),
+      inspectorMasteryTag: document.getElementById('insp-mastery-tag'),
       inspectorStats: document.getElementById('insp-stats'),
       targetModeBtn: document.getElementById('btn-target-mode'),
       upgradeBtn: document.getElementById('btn-upgrade-tower'),
@@ -86,8 +91,33 @@ export class UIManager {
       techCoresDisplay: document.getElementById('tech-cores-display'),
       achieveModal: document.getElementById('modal-achieve'),
       achieveList: document.getElementById('achieve-list'),
+
+      // Stage Selection & Difficulty
       stageModal: document.getElementById('modal-stage'),
       stageList: document.getElementById('stage-list'),
+      difficultySelector: document.getElementById('difficulty-selector'),
+      mutatorsGrid: document.getElementById('mutators-grid'),
+      mutatorsBadge: document.getElementById('mutators-badge'),
+      stageCoreMult: document.getElementById('stage-core-mult'),
+      stageScoreMult: document.getElementById('stage-score-mult'),
+
+      // Protocol Selection & Active Drawer
+      protocolModal: document.getElementById('modal-protocol'),
+      protocolCardsContainer: document.getElementById('protocol-cards-container'),
+      btnProtocolReroll: document.getElementById('btn-protocol-reroll'),
+      protocolRerollCount: document.getElementById('protocol-reroll-count'),
+      activeProtocolsModal: document.getElementById('modal-active-protocols'),
+      activeProtocolsList: document.getElementById('active-protocols-list'),
+
+      // Mastery & Records Modals
+      masteryModal: document.getElementById('modal-mastery'),
+      masteryList: document.getElementById('mastery-list'),
+      recordsModal: document.getElementById('modal-records'),
+      recordsContent: document.getElementById('records-content'),
+      menuBtnMastery: document.getElementById('menu-btn-mastery'),
+      menuBtnRecords: document.getElementById('menu-btn-records'),
+
+      // Result Modal
       resultModal: document.getElementById('modal-result'),
       resultTitle: document.getElementById('result-title'),
       resultDesc: document.getElementById('result-desc'),
@@ -111,6 +141,16 @@ export class UIManager {
       // Toast
       toastNotification: document.getElementById('toast-notification')
     };
+
+    // Link game engine callbacks
+    this.game.onSelectProtocol = (protocols, rerollsLeft) => {
+      this.showProtocolModal(protocols, rerollsLeft);
+    };
+
+    state.onMastery((towerId, levelInfo) => {
+      const tower = TOWER_TYPES[towerId];
+      this.showToast(`${tower?.name || towerId} が熟練度【Lv.${levelInfo.level} ${levelInfo.title}】に到達！ (${levelInfo.bonusDesc})`, 'TOWER MASTERY UPGRADE');
+    });
 
     this.initPWA();
     this.renderTowerShop();
@@ -436,10 +476,27 @@ export class UIManager {
       this.game.selectTower(null);
     });
 
+    // 8.5 Endgame & Mastery Navigation
+    this.dom.menuBtnMastery?.addEventListener('click', () => {
+      this.openMasteryModal();
+    });
+
+    this.dom.menuBtnRecords?.addEventListener('click', () => {
+      this.openRecordsModal();
+    });
+
+    this.dom.protocolsQuickBtn?.addEventListener('click', () => {
+      this.openActiveProtocolsModal();
+    });
+
+    this.dom.btnProtocolReroll?.addEventListener('click', () => {
+      this.game.rerollProtocols();
+    });
+
     // 9. Result Modal Buttons
     this.dom.resultRetryBtn?.addEventListener('click', () => {
       this.closeModals();
-      this.game.loadStage(this.game.currentMapId, this.game.isEndless);
+      this.game.loadStage(this.game.currentMapId, this.game.isEndless, this.selectedDifficulty, Array.from(this.selectedModifiers));
     });
     this.dom.resultGuideBtn?.addEventListener('click', () => {
       this.openGuideModal();
@@ -455,8 +512,8 @@ export class UIManager {
 
     // 10. Game Engine Callbacks
     this.game.onStateChange = (gameState) => this.onGameStateUpdate(gameState);
-    this.game.onGameOver = (wave) => this.showGameOverModal(wave);
-    this.game.onVictory = (wave, isFlawless, coreReward) => this.showVictoryModal(wave, isFlawless, coreReward);
+    this.game.onGameOver = (wave, score) => this.showGameOverModal(wave, score);
+    this.game.onVictory = (wave, isFlawless, coreReward, score) => this.showVictoryModal(wave, isFlawless, coreReward, score);
   }
 
   onGameStateUpdate(gameState) {
@@ -468,6 +525,17 @@ export class UIManager {
     if (this.dom.baseHpMax) this.dom.baseHpMax.innerText = maxBaseHp;
     if (this.dom.wave) this.dom.wave.innerText = wave;
     if (this.dom.waveMax) this.dom.waveMax.innerText = isEndless ? '∞' : maxWaves;
+
+    // Update Protocol Badge in Floating controls
+    if (this.dom.hudProtoBadge) {
+      const pCount = this.game.activeProtocols?.length || 0;
+      this.dom.hudProtoBadge.innerText = pCount;
+      if (pCount > 0) {
+        this.dom.hudProtoBadge.classList.add('active');
+      } else {
+        this.dom.hudProtoBadge.classList.remove('active');
+      }
+    }
 
     // Wave Action Button
     if (waveState === 'INTERMISSION') {
@@ -586,6 +654,18 @@ export class UIManager {
       this.dom.inspectorTitle.innerText = `${tower.getName()} [${tower.targetMode}]`;
     }
 
+    if (this.dom.inspectorMasteryTag) {
+      const mastery = state.getTowerMastery(tower.typeId);
+      const lvlInfo = TOWER_MASTERY_LEVELS[mastery.level] || TOWER_MASTERY_LEVELS[0];
+      this.dom.inspectorMasteryTag.innerText = `Mastery Lv.${mastery.level} [${lvlInfo.title}]`;
+      this.dom.inspectorMasteryTag.title = `撃破数: ${mastery.kills} | ${lvlInfo.bonusDesc}`;
+      if (mastery.level >= 5) {
+        this.dom.inspectorMasteryTag.classList.add('master-max');
+      } else {
+        this.dom.inspectorMasteryTag.classList.remove('master-max');
+      }
+    }
+
     if (this.dom.inspectorStats) {
       const dmg = Math.round(tower.effectiveDamage);
       const rate = tower.effectiveFireRate.toFixed(1);
@@ -665,6 +745,10 @@ export class UIManager {
     this.dom.techModal?.classList.add('hidden');
     this.dom.achieveModal?.classList.add('hidden');
     this.dom.stageModal?.classList.add('hidden');
+    this.dom.protocolModal?.classList.add('hidden');
+    this.dom.activeProtocolsModal?.classList.add('hidden');
+    this.dom.masteryModal?.classList.add('hidden');
+    this.dom.recordsModal?.classList.add('hidden');
     this.dom.resultModal?.classList.add('hidden');
   }
 
@@ -857,6 +941,11 @@ export class UIManager {
                 ${enemy.isStealth ? `<span class="badge stealth">STEALTH</span>` : ''}
                 ${enemy.splitsInto ? `<span class="badge split">SPLIT</span>` : ''}
                 ${enemy.healRate ? `<span class="badge heal">REPAIR</span>` : ''}
+                ${enemy.attacksTowers ? `<span class="badge alert">TOWER HACK</span>` : ''}
+                ${enemy.suicideOnTowers ? `<span class="badge alert">KAMIKAZE</span>` : ''}
+                ${enemy.canWarp ? `<span class="badge warp">WARP</span>` : ''}
+                ${enemy.reflectEnergy ? `<span class="badge reflect">REFLECT</span>` : ''}
+                ${enemy.shieldAura ? `<span class="badge aura">AURA</span>` : ''}
               </div>
             </div>
             <div class="guide-enemy-stats">
@@ -867,12 +956,17 @@ export class UIManager {
           </div>
           <div class="guide-enemy-counter">
             <strong>対策方針:</strong>
-            ${enemy.shield ? 'テスラコイルやEMPサージでシールドを一瞬で破砕せよ。' : ''}
-            ${enemy.armor ? '迫撃砲の爆発やレーザー熱線で装甲を突破せよ。' : ''}
-            ${enemy.isStealth ? 'テスラの連鎖電撃や迫撃砲の爆風で炙り出せ。' : ''}
-            ${enemy.splitsInto ? '分裂直後にバルカンの連射や迫撃砲で一掃せよ。' : ''}
-            ${enemy.healRate ? 'スナイパーの標的を【LAST】にして背後から最優先狙撃！' : ''}
-            ${!enemy.shield && !enemy.armor && !enemy.isStealth && !enemy.splitsInto && !enemy.healRate ? 'パルス砲やバルカンの集中砲火で早期撃破。' : ''}
+            ${enemy.attacksTowers ? 'タワーを遠距離からEMPハッキングし機能停止させる。スナイパーで射程外から即刻排除せよ！' : ''}
+            ${enemy.suicideOnTowers ? 'タワーに特攻して大爆発を起こす。クライオの凍結で足を止め、バルカンで空中撃墜せよ！' : ''}
+            ${enemy.canWarp ? '空間跳躍で前進する。レーザーの継続照射や迫撃砲の広域爆破でワープ先を焼き払え！' : ''}
+            ${enemy.reflectEnergy ? 'エネルギー兵器を40%反射！迫撃砲やスナイパーの実体爆破・徹甲弾で粉砕せよ！' : ''}
+            ${enemy.shieldAura ? '周囲の敵にシールドを常時給電する。EMPサージで一網打尽にせよ！' : ''}
+            ${!enemy.attacksTowers && !enemy.suicideOnTowers && !enemy.canWarp && !enemy.reflectEnergy && !enemy.shieldAura && enemy.shield ? 'テスラコイルやEMPサージでシールドを一瞬で破砕せよ。' : ''}
+            ${!enemy.attacksTowers && !enemy.suicideOnTowers && !enemy.canWarp && !enemy.reflectEnergy && !enemy.shieldAura && enemy.armor ? '迫撃砲の爆発やレーザー熱線で装甲を突破せよ。' : ''}
+            ${!enemy.attacksTowers && !enemy.suicideOnTowers && !enemy.canWarp && !enemy.reflectEnergy && !enemy.shieldAura && enemy.isStealth ? 'テスラの連鎖電撃や迫撃砲の爆風で炙り出せ。' : ''}
+            ${!enemy.attacksTowers && !enemy.suicideOnTowers && !enemy.canWarp && !enemy.reflectEnergy && !enemy.shieldAura && enemy.splitsInto ? '分裂直後にバルカンの連射や迫撃砲で一掃せよ。' : ''}
+            ${!enemy.attacksTowers && !enemy.suicideOnTowers && !enemy.canWarp && !enemy.reflectEnergy && !enemy.shieldAura && enemy.healRate ? 'スナイパーの標的を【LAST】にして背後から最優先狙撃！' : ''}
+            ${!enemy.attacksTowers && !enemy.suicideOnTowers && !enemy.canWarp && !enemy.reflectEnergy && !enemy.shieldAura && !enemy.shield && !enemy.armor && !enemy.isStealth && !enemy.splitsInto && !enemy.healRate ? 'パルス砲やバルカンの集中砲火で早期撃破。' : ''}
           </div>
         `;
         enemiesContainer.appendChild(card);
@@ -968,7 +1062,86 @@ export class UIManager {
     this.dom.mainMenuModal?.classList.add('hidden');
     this.dom.settingsModal?.classList.add('hidden');
     this.dom.stageModal?.classList.remove('hidden');
+    this.renderStageDifficultyAndMutators();
     this.renderStages();
+  }
+
+  renderStageDifficultyAndMutators() {
+    // 1. Difficulty Buttons
+    const diffBtns = this.dom.difficultySelector?.querySelectorAll('.btn-diff');
+    diffBtns?.forEach((btn) => {
+      const diffKey = btn.dataset.diff;
+      if (diffKey === this.selectedDifficulty) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+      btn.onclick = () => {
+        audio.ensureContext();
+        audio.playHit();
+        this.selectedDifficulty = diffKey;
+        this.renderStageDifficultyAndMutators();
+      };
+    });
+
+    // 2. Mutators Grid
+    if (this.dom.mutatorsGrid) {
+      this.dom.mutatorsGrid.innerHTML = '';
+      for (const key in MODIFIERS) {
+        const mod = MODIFIERS[key];
+        const isSelected = this.selectedModifiers.has(key);
+        const card = document.createElement('div');
+        card.className = `mutator-card ${isSelected ? 'active' : ''}`;
+        card.innerHTML = `
+          <div class="mutator-head">
+            <span class="mutator-icon">${ICONS[mod.icon] || ICONS.danger}</span>
+            <strong class="mutator-name">${mod.name}</strong>
+            <span class="mutator-check">${isSelected ? 'ON' : 'OFF'}</span>
+          </div>
+          <div class="mutator-desc">${mod.desc}</div>
+          <div class="mutator-bonus">
+            <span class="badge bonus">+${Math.round(mod.coreMultBonus * 100)}% コア</span>
+            <span class="badge bonus">+${Math.round(mod.scoreMultBonus * 100)}% スコア</span>
+          </div>
+        `;
+
+        card.onclick = () => {
+          audio.ensureContext();
+          audio.playHit();
+          if (this.selectedModifiers.has(key)) {
+            this.selectedModifiers.delete(key);
+          } else {
+            this.selectedModifiers.add(key);
+          }
+          this.renderStageDifficultyAndMutators();
+        };
+
+        this.dom.mutatorsGrid.appendChild(card);
+      }
+    }
+
+    // 3. Multiplier Summary Calculation
+    const baseCoreMult = DIFFICULTIES[this.selectedDifficulty]?.coreMult || 1.0;
+    const baseScoreMult = DIFFICULTIES[this.selectedDifficulty]?.scoreMult || 1.0;
+
+    let bonusCoreMult = 0;
+    let bonusScoreMult = 0;
+    this.selectedModifiers.forEach((mKey) => {
+      const mod = MODIFIERS[mKey];
+      if (mod) {
+        bonusCoreMult += mod.coreMultBonus || 0;
+        bonusScoreMult += mod.scoreMultBonus || 0;
+      }
+    });
+
+    const totalCoreMult = (baseCoreMult + bonusCoreMult).toFixed(2);
+    const totalScoreMult = (baseScoreMult + bonusScoreMult).toFixed(2);
+
+    if (this.dom.stageCoreMult) this.dom.stageCoreMult.innerText = `${totalCoreMult}x`;
+    if (this.dom.stageScoreMult) this.dom.stageScoreMult.innerText = `${totalScoreMult}x`;
+    if (this.dom.mutatorsBadge) {
+      this.dom.mutatorsBadge.innerText = `${this.selectedModifiers.size} / ${Object.keys(MODIFIERS).length} 適用中`;
+    }
   }
 
   renderStages() {
@@ -979,37 +1152,315 @@ export class UIManager {
       const record = state.data.stageRecords[map.id] || { highestWave: 0, stars: 0, cleared: false };
       const card = document.createElement('div');
       card.className = `stage-card ${record.cleared ? 'cleared' : ''}`;
+
+      // Star display
+      const starsCount = record.stars || 0;
+      const starsHtml = '★'.repeat(starsCount) + '☆'.repeat(Math.max(0, 3 - starsCount));
+
+      // Highest difficulty clear tag
+      const diffTag = record.highestDifficulty ? `<span class="stage-diff-badge diff-${record.highestDifficulty.toLowerCase()}">${record.highestDifficulty}</span>` : '';
+
       card.innerHTML = `
         <div class="stage-header">
-          <span class="stage-name">${map.name}</span>
-          <span class="stage-diff">${map.difficulty}</span>
+          <div class="stage-title-wrap">
+            <span class="stage-id-pill">STAGE ${map.id}</span>
+            <span class="stage-name">${map.name}</span>
+          </div>
+          <div class="stage-ratings">
+            <span class="stage-stars">${starsHtml}</span>
+            ${diffTag}
+          </div>
         </div>
         <div class="stage-desc">${map.desc}</div>
         <div class="stage-footer">
-          <span class="stage-waves">WAVES: ${map.wavesCount}</span>
-          <span class="stage-reward">初クリア: ${ICONS.core} ${map.coreReward}</span>
+          <div class="stage-meta-info">
+            <span class="stage-waves">WAVES: ${map.wavesCount}</span>
+            <span class="stage-reward">初クリア: ${ICONS.core} ${map.coreReward}</span>
+          </div>
           <div class="stage-btns">
-            <button class="btn-play-stage" data-map="${map.id}">CAMPAIGN</button>
-            <button class="btn-play-endless" data-map="${map.id}">ENDLESS</button>
+            <button class="btn-play-stage" data-map="${map.id}">
+              <svg class="icon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              CAMPAIGN
+            </button>
+            <button class="btn-play-endless" data-map="${map.id}">
+              <svg class="icon icon-zap" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              ENDLESS (∞)
+            </button>
           </div>
         </div>
       `;
 
       card.querySelector('.btn-play-stage')?.addEventListener('click', () => {
         this.closeModals();
-        this.game.loadStage(map.id, false);
+        this.game.loadStage(map.id, false, this.selectedDifficulty, Array.from(this.selectedModifiers));
       });
 
       card.querySelector('.btn-play-endless')?.addEventListener('click', () => {
         this.closeModals();
-        this.game.loadStage(map.id, true);
+        this.game.loadStage(map.id, true, this.selectedDifficulty, Array.from(this.selectedModifiers));
       });
 
       this.dom.stageList.appendChild(card);
     }
   }
 
-  showGameOverModal(wave) {
+  // --- Tactical Roguelike Protocols ---
+
+  showProtocolModal(protocols, rerollsLeft = 0) {
+    audio.ensureContext();
+    audio.playVictory(); // Celebratory sound for unlocking draft
+
+    this.dom.modalBackdrop?.classList.remove('hidden');
+    this.dom.protocolModal?.classList.remove('hidden');
+
+    if (this.dom.protocolRerollCount) {
+      this.dom.protocolRerollCount.innerText = `残り: ${rerollsLeft}回`;
+    }
+    if (this.dom.btnProtocolReroll) {
+      if (rerollsLeft <= 0) {
+        this.dom.btnProtocolReroll.classList.add('disabled');
+      } else {
+        this.dom.btnProtocolReroll.classList.remove('disabled');
+      }
+    }
+
+    if (!this.dom.protocolCardsContainer) return;
+    this.dom.protocolCardsContainer.innerHTML = '';
+
+    protocols.forEach((proto) => {
+      const card = document.createElement('div');
+      card.className = `protocol-card rarity-${proto.rarity.toLowerCase()}`;
+      card.innerHTML = `
+        <div class="protocol-card-glow"></div>
+        <div class="protocol-header">
+          <span class="protocol-rarity-badge ${proto.rarity.toLowerCase()}">${proto.rarity}</span>
+          <span class="protocol-icon">${ICONS[proto.icon] || ICONS.zap}</span>
+        </div>
+        <div class="protocol-title">${proto.name}</div>
+        <div class="protocol-desc">${proto.desc}</div>
+        <div class="protocol-flavor">${proto.flavor || 'NEXUS TACTICAL OVERRIDE'}</div>
+        <button class="btn-select-protocol">戦術投入 (ACTIVATE)</button>
+      `;
+
+      card.onclick = () => {
+        audio.ensureContext();
+        audio.playUpgrade();
+        this.game.applyProtocol(proto);
+        this.closeModals();
+        this.showToast(`戦術プロトコル【${proto.name}】が起動しました！`, 'TACTICAL PROTOCOL ACTIVATED');
+      };
+
+      this.dom.protocolCardsContainer.appendChild(card);
+    });
+  }
+
+  openActiveProtocolsModal() {
+    audio.ensureContext();
+    this.dom.modalBackdrop?.classList.remove('hidden');
+    this.dom.activeProtocolsModal?.classList.remove('hidden');
+
+    if (!this.dom.activeProtocolsList) return;
+    this.dom.activeProtocolsList.innerHTML = '';
+
+    const activeList = this.game.activeProtocols || [];
+    if (activeList.length === 0) {
+      this.dom.activeProtocolsList.innerHTML = `
+        <div class="protocols-empty-msg">
+          <svg class="icon icon-zap" viewBox="0 0 24 24" style="width: 48px; height: 48px; color: var(--color-neon-blue); opacity: 0.5; margin-bottom: 12px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          <p>現在発動中の戦術プロトコルはありません。</p>
+          <small>ウェーブ 5 / 10 / 15 / 20... クリア時に戦術プロトコルが起動します。</small>
+        </div>
+      `;
+      return;
+    }
+
+    activeList.forEach((proto) => {
+      const card = document.createElement('div');
+      card.className = `active-proto-item rarity-${proto.rarity.toLowerCase()}`;
+      card.innerHTML = `
+        <div class="proto-mini-header">
+          <span class="protocol-rarity-badge ${proto.rarity.toLowerCase()}">${proto.rarity}</span>
+          <strong class="proto-name">${proto.name}</strong>
+        </div>
+        <div class="proto-desc">${proto.desc}</div>
+      `;
+      this.dom.activeProtocolsList.appendChild(card);
+    });
+  }
+
+  // --- Tower Mastery Modal ---
+
+  openMasteryModal() {
+    audio.ensureContext();
+    this.dom.modalBackdrop?.classList.remove('hidden');
+    this.dom.mainMenuModal?.classList.add('hidden');
+    this.dom.settingsModal?.classList.add('hidden');
+    this.dom.masteryModal?.classList.remove('hidden');
+    this.renderMastery();
+  }
+
+  renderMastery() {
+    if (!this.dom.masteryList) return;
+    this.dom.masteryList.innerHTML = '';
+
+    for (const key in TOWER_TYPES) {
+      const tower = TOWER_TYPES[key];
+      const mData = state.getTowerMastery(tower.id);
+      const lvl = mData.level || 0;
+      const kills = mData.kills || 0;
+      const currentLvlInfo = TOWER_MASTERY_LEVELS[lvl] || TOWER_MASTERY_LEVELS[0];
+      const nextLvlInfo = TOWER_MASTERY_LEVELS[lvl + 1];
+
+      let progressPct = 100;
+      let reqKillsText = 'MAX';
+      if (nextLvlInfo) {
+        const prevReq = currentLvlInfo.reqKills || 0;
+        const nextReq = nextLvlInfo.reqKills;
+        const currentProgress = Math.max(0, kills - prevReq);
+        const needed = nextReq - prevReq;
+        progressPct = Math.min(100, Math.max(0, (currentProgress / needed) * 100));
+        reqKillsText = `${kills} / ${nextReq} KILLS`;
+      }
+
+      const card = document.createElement('div');
+      card.className = `mastery-card-item ${lvl >= 5 ? 'master-max' : ''}`;
+      card.innerHTML = `
+        <div class="mastery-card-head">
+          <div class="mastery-icon-box" style="border-color: ${tower.color};">
+            ${getTowerVisualSvg(tower.id, tower.color, 36)}
+          </div>
+          <div class="mastery-title-box">
+            <div class="mastery-tower-name">${tower.name}</div>
+            <div class="mastery-rank-badge">Lv.${lvl} ${currentLvlInfo.title}</div>
+          </div>
+          <div class="mastery-kills-display">${kills.toLocaleString()} 撃破</div>
+        </div>
+
+        <div class="mastery-progress-track">
+          <div class="mastery-progress-fill" style="width: ${progressPct.toFixed(1)}%;"></div>
+        </div>
+        <div class="mastery-progress-label">
+          <span>次のレベルまで</span>
+          <strong>${reqKillsText}</strong>
+        </div>
+
+        <div class="mastery-perks-box">
+          <div class="perks-label">適用中のマスタリーボーナス:</div>
+          <div class="perks-desc">${currentLvlInfo.bonusDesc}</div>
+          ${nextLvlInfo ? `<div class="perks-next">次: Lv.${nextLvlInfo.level} ${nextLvlInfo.title} (${nextLvlInfo.bonusDesc})</div>` : '<div class="perks-next max">★ MASTER SPECIALIZATION COMPLETED (-10% コスト割引解禁)</div>'}
+        </div>
+      `;
+
+      this.dom.masteryList.appendChild(card);
+    }
+  }
+
+  // --- Commander Dossier / Records Modal ---
+
+  openRecordsModal() {
+    audio.ensureContext();
+    this.dom.modalBackdrop?.classList.remove('hidden');
+    this.dom.mainMenuModal?.classList.add('hidden');
+    this.dom.settingsModal?.classList.add('hidden');
+    this.dom.recordsModal?.classList.remove('hidden');
+    this.renderRecords();
+  }
+
+  renderRecords() {
+    if (!this.dom.recordsContent) return;
+
+    // Calculate aggregate statistics
+    let totalKills = 0;
+    for (const tId in state.data.towerMastery) {
+      totalKills += state.data.towerMastery[tId].kills || 0;
+    }
+
+    let clearedStagesCount = 0;
+    let flawlessCount = 0;
+    for (const sId in state.data.stageRecords) {
+      const rec = state.data.stageRecords[sId];
+      if (rec.cleared) clearedStagesCount++;
+      if (rec.stars >= 3) flawlessCount++;
+    }
+
+    const achieveCount = state.data.unlockedAchievements?.length || 0;
+    const endlessRecords = state.data.endlessRecords || {};
+
+    let highestEndlessWave = 0;
+    let highestEndlessScore = 0;
+    for (const sId in endlessRecords) {
+      if (endlessRecords[sId].highestWave > highestEndlessWave) {
+        highestEndlessWave = endlessRecords[sId].highestWave;
+      }
+      if (endlessRecords[sId].score > highestEndlessScore) {
+        highestEndlessScore = endlessRecords[sId].score;
+      }
+    }
+
+    this.dom.recordsContent.innerHTML = `
+      <div class="dossier-stats-grid">
+        <div class="dossier-stat-card">
+          <div class="dossier-stat-num highlight">${totalKills.toLocaleString()}</div>
+          <div class="dossier-stat-lbl">敵性体 累計殲滅数</div>
+        </div>
+        <div class="dossier-stat-card">
+          <div class="dossier-stat-num">${clearedStagesCount} / 8</div>
+          <div class="dossier-stat-lbl">制圧済み作戦区域</div>
+        </div>
+        <div class="dossier-stat-card">
+          <div class="dossier-stat-num gold">${flawlessCount}</div>
+          <div class="dossier-stat-lbl">パーフェクト防衛 (★3)</div>
+        </div>
+        <div class="dossier-stat-card">
+          <div class="dossier-stat-num cyan">${achieveCount} / ${ACHIEVEMENTS.length}</div>
+          <div class="dossier-stat-lbl">解禁済み軍事実績</div>
+        </div>
+        <div class="dossier-stat-card">
+          <div class="dossier-stat-num purple">Wave ${highestEndlessWave}</div>
+          <div class="dossier-stat-lbl">エンドレス最高到達</div>
+        </div>
+        <div class="dossier-stat-card">
+          <div class="dossier-stat-num green">${highestEndlessScore.toLocaleString()}</div>
+          <div class="dossier-stat-lbl">エンドレス最高スコア</div>
+        </div>
+      </div>
+
+      <div class="dossier-section-title">作戦区域別 防衛記録マトリクス</div>
+      <div class="dossier-stages-table-wrap">
+        <table class="dossier-table">
+          <thead>
+            <tr>
+              <th>ステージ</th>
+              <th>クリア状況</th>
+              <th>防衛評価</th>
+              <th>最高難易度</th>
+              <th>エンドレス到達</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${MAPS.map((map) => {
+              const rec = state.data.stageRecords[map.id] || { cleared: false, stars: 0 };
+              const eRec = endlessRecords[map.id] || { highestWave: 0, score: 0 };
+              const stars = '★'.repeat(rec.stars || 0) + '☆'.repeat(Math.max(0, 3 - (rec.stars || 0)));
+              return `
+                <tr>
+                  <td><strong>${map.name}</strong></td>
+                  <td>${rec.cleared ? '<span class="status-cleared">制圧済</span>' : '<span class="status-unclear">未制圧</span>'}</td>
+                  <td class="stars-cell">${stars}</td>
+                  <td>${rec.highestDifficulty ? `<span class="badge diff-${rec.highestDifficulty.toLowerCase()}">${rec.highestDifficulty}</span>` : '-'}</td>
+                  <td>${eRec.highestWave > 0 ? `Wave ${eRec.highestWave} (${eRec.score.toLocaleString()}pt)` : '-'}</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  // --- Result Modals ---
+
+  showGameOverModal(wave, score = 0) {
     this.dom.modalBackdrop?.classList.remove('hidden');
     this.dom.resultModal?.classList.remove('hidden');
     if (this.dom.resultTitle) {
@@ -1017,32 +1468,39 @@ export class UIManager {
       this.dom.resultTitle.className = 'result-title defeat';
     }
     if (this.dom.resultDesc) {
-      this.dom.resultDesc.innerText = '拠点の防衛ラインが突破されました。戦術マニュアルで敵の弱点を確認し、研究所でタワーを強化して再挑戦しましょう。';
+      this.dom.resultDesc.innerText = '防衛ラインが突破されました。敵の弱点に応じた兵科配置や、量子研究所での永続強化、戦術プロトコルを見直して再挑戦せよ。';
     }
     if (this.dom.resultStats) {
       this.dom.resultStats.innerHTML = `
+        <div class="res-stat">作戦難易度: <strong>${this.selectedDifficulty}</strong></div>
         <div class="res-stat">到達ウェーブ: <strong>${wave}</strong></div>
+        <div class="res-stat">獲得スコア: <strong>${(score || 0).toLocaleString()} pt</strong></div>
         <div class="res-stat">所持コア: <strong>${ICONS.core} ${state.data.quantumCores}</strong></div>
       `;
     }
   }
 
-  showVictoryModal(wave, isFlawless, coreReward = 0) {
+  showVictoryModal(wave, isFlawless, coreReward = 0, score = 0) {
     this.dom.modalBackdrop?.classList.remove('hidden');
     this.dom.resultModal?.classList.remove('hidden');
     if (this.dom.resultTitle) {
-      this.dom.resultTitle.innerText = isFlawless ? 'PERFECT VICTORY (FLAWLESS)' : 'MISSION ACCOMPLISHED';
+      this.dom.resultTitle.innerText = isFlawless ? 'PERFECT VICTORY (FLAWLESS ★★★)' : 'MISSION ACCOMPLISHED';
       this.dom.resultTitle.className = 'result-title victory';
     }
     if (this.dom.resultDesc) {
-      this.dom.resultDesc.innerText = 'すべての侵略軍を殲滅しました！新たなクォンタムコアを獲得しました。';
+      this.dom.resultDesc.innerText = isFlawless
+        ? '拠点HPの無傷防衛を達成！追加のクォンタムコアと最高評価を獲得しました。'
+        : 'すべての敵性勢力を殲滅し作戦区域を制圧しました！新たなクォンタムコアを獲得しました。';
     }
     if (this.dom.resultStats) {
       this.dom.resultStats.innerHTML = `
+        <div class="res-stat">作戦難易度: <strong>${this.selectedDifficulty}</strong></div>
         <div class="res-stat">クリアウェーブ: <strong>${wave}</strong></div>
         <div class="res-stat">獲得コア: <strong>${ICONS.core} +${coreReward}</strong></div>
-        <div class="res-stat">拠点完全防衛: <strong>${isFlawless ? 'PERFECT (FLAWLESS)' : 'CLEARED'}</strong></div>
+        <div class="res-stat">最終スコア: <strong>${(score || 0).toLocaleString()} pt</strong></div>
+        <div class="res-stat">防衛評価: <strong>${isFlawless ? 'FLAWLESS (完全防衛)' : 'CLEAR'}</strong></div>
       `;
     }
   }
 }
+
