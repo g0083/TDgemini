@@ -74,6 +74,8 @@ export const MODIFIERS = [
     desc: 'すべての敵ユニットの移動速度 +25%',
     scoreBonus: 0.25,
     coreBonus: 0.25,
+    scoreMultBonus: 0.25,
+    coreMultBonus: 0.25,
     color: '#00f0ff'
   },
   {
@@ -83,6 +85,8 @@ export const MODIFIERS = [
     desc: '全敵の基本装甲 +15% ＆ シールド耐久値 +40%',
     scoreBonus: 0.30,
     coreBonus: 0.30,
+    scoreMultBonus: 0.30,
+    coreMultBonus: 0.30,
     color: '#ff9900'
   },
   {
@@ -92,6 +96,8 @@ export const MODIFIERS = [
     desc: '敵撃破時に得られるクレジット -25%',
     scoreBonus: 0.35,
     coreBonus: 0.35,
+    scoreMultBonus: 0.35,
+    coreMultBonus: 0.35,
     color: '#ff4d4d'
   },
   {
@@ -101,6 +107,8 @@ export const MODIFIERS = [
     desc: '全司令官スキル（爆撃・EMP・過負荷・補給）が使用不可',
     scoreBonus: 0.40,
     coreBonus: 0.40,
+    scoreMultBonus: 0.40,
+    coreMultBonus: 0.40,
     color: '#b84dff'
   },
   {
@@ -110,6 +118,8 @@ export const MODIFIERS = [
     desc: '各ウェーブの敵の総出現数が +35% 増加',
     scoreBonus: 0.45,
     coreBonus: 0.45,
+    scoreMultBonus: 0.45,
+    coreMultBonus: 0.45,
     color: '#ffea00'
   },
   {
@@ -119,6 +129,8 @@ export const MODIFIERS = [
     desc: 'ボスの最大HP +50% ＆ ボスの移動速度 +20%',
     scoreBonus: 0.50,
     coreBonus: 0.50,
+    scoreMultBonus: 0.50,
+    coreMultBonus: 0.50,
     color: '#ff0055'
   }
 ];

@@ -1124,21 +1124,81 @@ html, body {
   justify-content: center;
   z-index: 100;
   padding: 16px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .cyber-modal {
   width: 100%;
   max-width: 600px;
-  max-height: 85vh;
-  background: rgba(12, 20, 36, 0.95);
+  max-height: 90vh;
+  background: rgba(12, 20, 36, 0.96);
   border: 1px solid var(--color-cyan);
   box-shadow: 0 0 35px var(--color-cyan-glow);
   border-radius: 16px;
-  padding: 18px;
+  padding: 18px 20px;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 240, 255, 0.4) rgba(6, 12, 24, 0.6);
   animation: zoom-in 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Custom Cyber Scrollbars */
+.cyber-modal::-webkit-scrollbar,
+.menu-hub-grid::-webkit-scrollbar,
+.stages-grid::-webkit-scrollbar,
+.mastery-cards-grid::-webkit-scrollbar,
+.tech-grid::-webkit-scrollbar,
+.achieve-list::-webkit-scrollbar,
+.guide-content::-webkit-scrollbar,
+.combat-log::-webkit-scrollbar,
+.modal-backdrop::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.cyber-modal::-webkit-scrollbar-track,
+.menu-hub-grid::-webkit-scrollbar-track,
+.stages-grid::-webkit-scrollbar-track,
+.mastery-cards-grid::-webkit-scrollbar-track,
+.tech-grid::-webkit-scrollbar-track,
+.achieve-list::-webkit-scrollbar-track,
+.guide-content::-webkit-scrollbar-track,
+.combat-log::-webkit-scrollbar-track,
+.modal-backdrop::-webkit-scrollbar-track {
+  background: rgba(4, 8, 16, 0.6);
+  border-radius: 3px;
+}
+
+.cyber-modal::-webkit-scrollbar-thumb,
+.menu-hub-grid::-webkit-scrollbar-thumb,
+.stages-grid::-webkit-scrollbar-thumb,
+.mastery-cards-grid::-webkit-scrollbar-thumb,
+.tech-grid::-webkit-scrollbar-thumb,
+.achieve-list::-webkit-scrollbar-thumb,
+.guide-content::-webkit-scrollbar-thumb,
+.combat-log::-webkit-scrollbar-thumb,
+.modal-backdrop::-webkit-scrollbar-thumb {
+  background: rgba(0, 240, 255, 0.35);
+  border-radius: 3px;
+  box-shadow: 0 0 6px var(--color-cyan-glow);
+}
+
+.cyber-modal::-webkit-scrollbar-thumb:hover,
+.menu-hub-grid::-webkit-scrollbar-thumb:hover,
+.stages-grid::-webkit-scrollbar-thumb:hover,
+.mastery-cards-grid::-webkit-scrollbar-thumb:hover,
+.tech-grid::-webkit-scrollbar-thumb:hover,
+.achieve-list::-webkit-scrollbar-thumb:hover,
+.guide-content::-webkit-scrollbar-thumb:hover,
+.combat-log::-webkit-scrollbar-thumb:hover,
+.modal-backdrop::-webkit-scrollbar-thumb:hover {
+  background: var(--color-cyan);
+  box-shadow: 0 0 10px var(--color-cyan);
 }
 
 @keyframes zoom-in {
@@ -1151,6 +1211,12 @@ html, body {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 6px;
+  position: sticky;
+  top: -18px;
+  background: rgba(12, 20, 36, 0.98);
+  padding: 4px 0 6px 0;
+  margin-top: -4px;
+  z-index: 10;
 }
 
 .modal-header h2 {
@@ -1288,12 +1354,15 @@ html, body {
 }
 
 /* Stage Grid */
+.stage-modal {
+  max-width: 860px;
+}
+
 .stages-grid {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 10px;
-  overflow-y: auto;
-  padding-right: 4px;
+  margin-top: 8px;
 }
 
 .stage-card {
@@ -1557,24 +1626,24 @@ html, body {
    HEADQUARTERS MAIN MENU MODAL (HUB)
    =================================================== */
 .menu-hub-modal {
-  max-width: 500px;
+  max-width: 620px;
 }
 
 .menu-hub-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
 }
 
 .hub-nav-card {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   background: rgba(18, 30, 54, 0.7);
   border: 1px solid rgba(0, 240, 255, 0.2);
-  border-radius: 12px;
-  padding: 12px 14px;
+  border-radius: 10px;
+  padding: 10px 12px;
   cursor: pointer;
   text-align: left;
   transition: all 0.2s ease;
@@ -1611,7 +1680,7 @@ html, body {
 }
 
 .hub-card-icon {
-  font-size: 26px;
+  font-size: 24px;
   flex-shrink: 0;
 }
 
@@ -1622,18 +1691,18 @@ html, body {
 .hub-card-text strong {
   display: block;
   font-family: var(--font-header);
-  font-size: 14px;
+  font-size: 13px;
   color: #fff;
   letter-spacing: 0.5px;
 }
 
 .hub-card-text small {
-  font-size: 11px;
+  font-size: 10px;
   color: #8da4c4;
 }
 
 .hub-arrow {
-  font-size: 16px;
+  font-size: 14px;
   color: var(--color-cyan);
   opacity: 0.7;
 }
@@ -1642,7 +1711,13 @@ html, body {
   display: flex;
   gap: 8px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding-top: 12px;
+  padding-top: 10px;
+  position: sticky;
+  bottom: -18px;
+  background: rgba(12, 20, 36, 0.98);
+  margin: 0 -4px -4px -4px;
+  padding: 10px 4px 4px 4px;
+  z-index: 5;
 }
 
 .btn-resume-mission {
@@ -2684,14 +2759,14 @@ html, body {
    ROGUELIKE PROTOCOL MODAL & CARDS
    =================================================== */
 .protocol-modal {
-  max-width: 720px;
+  max-width: 840px;
 }
 
 .protocol-cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
-  margin: 16px 0;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin: 14px 0;
 }
 
 .protocol-card {
@@ -2885,6 +2960,10 @@ html, body {
 }
 
 /* Active Protocols Drawer */
+.active-protocols-modal {
+  max-width: 840px;
+}
+
 .active-protocols-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -2924,14 +3003,14 @@ html, body {
    TOWER MASTERY MODAL & CARDS
    =================================================== */
 .mastery-modal {
-  max-width: 760px;
+  max-width: 840px;
 }
 
 .mastery-cards-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 14px;
-  margin-top: 14px;
+  gap: 12px;
+  margin-top: 12px;
 }
 
 .mastery-card-item {
@@ -3069,7 +3148,7 @@ html, body {
    COMMANDER DOSSIER / RECORDS MODAL
    =================================================== */
 .records-modal {
-  max-width: 760px;
+  max-width: 840px;
 }
 
 .dossier-stats-grid {

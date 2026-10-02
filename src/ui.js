@@ -1087,11 +1087,12 @@ export class UIManager {
     // 2. Mutators Grid
     if (this.dom.mutatorsGrid) {
       this.dom.mutatorsGrid.innerHTML = '';
-      for (const key in MODIFIERS) {
-        const mod = MODIFIERS[key];
-        const isSelected = this.selectedModifiers.has(key);
+      for (const mod of MODIFIERS) {
+        const isSelected = this.selectedModifiers.has(mod.id);
         const card = document.createElement('div');
         card.className = `mutator-card ${isSelected ? 'active' : ''}`;
+        const corePercent = Math.round((mod.coreBonus ?? mod.coreMultBonus ?? 0) * 100);
+        const scorePercent = Math.round((mod.scoreBonus ?? mod.scoreMultBonus ?? 0) * 100);
         card.innerHTML = `
           <div class="mutator-head">
             <span class="mutator-icon">${ICONS[mod.icon] || ICONS.danger}</span>
@@ -1100,18 +1101,18 @@ export class UIManager {
           </div>
           <div class="mutator-desc">${mod.desc}</div>
           <div class="mutator-bonus">
-            <span class="badge bonus">+${Math.round(mod.coreMultBonus * 100)}% コア</span>
-            <span class="badge bonus">+${Math.round(mod.scoreMultBonus * 100)}% スコア</span>
+            <span class="badge bonus">+${corePercent}% コア</span>
+            <span class="badge bonus">+${scorePercent}% スコア</span>
           </div>
         `;
 
         card.onclick = () => {
           audio.ensureContext();
           audio.playHit();
-          if (this.selectedModifiers.has(key)) {
-            this.selectedModifiers.delete(key);
+          if (this.selectedModifiers.has(mod.id)) {
+            this.selectedModifiers.delete(mod.id);
           } else {
-            this.selectedModifiers.add(key);
+            this.selectedModifiers.add(mod.id);
           }
           this.renderStageDifficultyAndMutators();
         };
@@ -1126,11 +1127,11 @@ export class UIManager {
 
     let bonusCoreMult = 0;
     let bonusScoreMult = 0;
-    this.selectedModifiers.forEach((mKey) => {
-      const mod = MODIFIERS[mKey];
+    this.selectedModifiers.forEach((mId) => {
+      const mod = MODIFIERS.find((m) => m.id === mId);
       if (mod) {
-        bonusCoreMult += mod.coreMultBonus || 0;
-        bonusScoreMult += mod.scoreMultBonus || 0;
+        bonusCoreMult += (mod.coreBonus ?? mod.coreMultBonus ?? 0);
+        bonusScoreMult += (mod.scoreBonus ?? mod.scoreMultBonus ?? 0);
       }
     });
 
@@ -1140,7 +1141,7 @@ export class UIManager {
     if (this.dom.stageCoreMult) this.dom.stageCoreMult.innerText = `${totalCoreMult}x`;
     if (this.dom.stageScoreMult) this.dom.stageScoreMult.innerText = `${totalScoreMult}x`;
     if (this.dom.mutatorsBadge) {
-      this.dom.mutatorsBadge.innerText = `${this.selectedModifiers.size} / ${Object.keys(MODIFIERS).length} 適用中`;
+      this.dom.mutatorsBadge.innerText = `${this.selectedModifiers.size} / ${MODIFIERS.length} 適用中`;
     }
   }
 
